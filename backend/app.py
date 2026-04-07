@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, methods = ["GET", "POST", "DELETE"])
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///whisk.db'
 db = SQLAlchemy (app)
@@ -45,6 +45,13 @@ def add_recipe():
     db.session.add(recipe)
     db.session.commit()
     return jsonify({'message': 'Recipe saved!'}), 201
+
+@app.route('/recipes/<int:id>', methods = ['DELETE'])
+def delete_recipe(id):
+    recipe = Recipe.query.get(id) 
+    db.session.delete(recipe)
+    db.session.commit()
+    return jsonify({'message': 'Recipe deleted!'}), 202
 
 if __name__ == '__main__':
     app.run(debug=True)

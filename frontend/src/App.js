@@ -19,7 +19,7 @@ function App() {
     <div>
       <h1>Whisk 🧁</h1>
       <AddRecipe onRecipeAdded = {fetchRecipes} />
-      <RecipeList recipes = {recipes} />
+      <RecipeList recipes = {recipes} onRecipeDeleted = {fetchRecipes} />
     </div>
   )
 }

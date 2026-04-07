@@ -12,7 +12,14 @@ function AddRecipe({ onRecipeAdded }) {
         setForm({...form, [e.target.name]: e.target.value })
     }
 
+    const [error, setError] = useState('')
+
     const handleSubmit = () => {
+        if (form.title === '' || form.ingredients === '' || form.steps === ''){
+            setError('Please fill all required fields.')
+            return
+        }
+        setError('')
         fetch('http://127.0.0.1:5000/recipes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json'},
@@ -24,7 +31,7 @@ function AddRecipe({ onRecipeAdded }) {
             setForm ({title: '', ingredients: '', steps: '', notes: ''})
         })
     }
-    
+
     return (
         <div>
             <h2>Add a Recipe</h2>
@@ -52,6 +59,7 @@ function AddRecipe({ onRecipeAdded }) {
                 value = {form.notes}
                 onChange = {handleChange}
             />
+            {error && <p style = {{color: 'red'}}>{error}</p>}
             <button onClick = {handleSubmit} > Save Recipe</button>
         </div>
     )
