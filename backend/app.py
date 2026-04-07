@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
@@ -21,6 +21,30 @@ with app.app_context():
 @app.route('/ping')
 def ping():
     return {"message": "Whisk backend is running!"}
+
+@app.route('/recipes', methods = ['GET'])
+def get_recipes():
+    recipes = Recipe.query.all()
+    return jsonify([{
+        'id': r.id,
+        'title': r.title,
+        'ingredients': r.ingredients,
+        'steps': r.steps,
+        'notes': r.notes,
+    } for r in recipes ])
+
+@app.route('/recipes', methods = ['POST'])
+def add_recipe():
+    data = request.get_json()
+    recipe = Recipe(
+        title = data['title'],
+        ingredients = data ['ingredients'],
+        steps = data ['steps'],
+        notes = data.get('notes', '')
+    )
+    db.session.add(recipe)
+    db.session.commit()
+    return jsonify({'message': 'Recipe saved!'}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
