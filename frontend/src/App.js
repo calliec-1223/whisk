@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import AddRecipe from './AddRecipe'
 import RecipeList from './RecipeList'
+import Converter from './Converter'
 
 function App() {
   const [recipes, setRecipes] = useState([])
@@ -20,6 +21,7 @@ function App() {
       <h1>Whisk 🧁</h1>
       <AddRecipe onRecipeAdded = {fetchRecipes} />
       <RecipeList recipes = {recipes} onRecipeDeleted = {fetchRecipes} />
+      <Converter/>
     </div>
   )
 }

@@ -1,74 +1,74 @@
 INGREDIENT_DENSITIES = {
     "flour": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 120
     },
     "sugar": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 200
     },
     "butter": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 227
     },
     "brown sugar": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 220
     },
     "powdered sugar": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 120
     },
     "cocoa powder": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 100
     },    
     "oats": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 90
     },
     "milk": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 240
     },
     "water": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 240
     },
     "oil": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 216
     },
     "cornstarch": {
-        "unit": "cups", 
+        "unit": "cup", 
         "grams_per_unit": 120
     },
     "salt": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 6
     },
     "baking powder": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 4
     },
     "baking soda": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 6
     },
     "yeast": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 3
     },
     "vanilla extract": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 4
     },
     "cinnamon": {
-        "unit": "teaspoons", 
+        "unit": "teaspoon", 
         "grams_per_unit": 3
     },
     "honey": {
-        "unit": "cups",
+        "unit": "cup",
         "grams_per_unit": 340
     }
 }
