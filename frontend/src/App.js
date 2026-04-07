@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AddRecipe from './AddRecipe'
+import RecipeList from './RecipeList'
 
 function App() {
   const [recipes, setRecipes] = useState([])
@@ -18,15 +19,7 @@ function App() {
     <div>
       <h1>Whisk 🧁</h1>
       <AddRecipe onRecipeAdded = {fetchRecipes} />
-      {recipes.map(recipe => (
-        <div key= {recipe.id}>
-          <h3>{recipe.title}</h3>
-          <p>{recipe.ingredients}</p>
-          <p>{recipe.steps}</p>
-          <p>{recipe.notes}</p>
-          <hr/>
-          </div>
-      ))}
+      <RecipeList recipes = {recipes} />
     </div>
   )
 }
