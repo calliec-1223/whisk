@@ -5,7 +5,8 @@ function AddRecipe({ onRecipeAdded }) {
         title: '',
         ingredients: '',
         steps: '',
-        notes: ''
+        notes: '',
+        servings: ''
     })
 
     const handleChange = (e) => {
@@ -15,8 +16,12 @@ function AddRecipe({ onRecipeAdded }) {
     const [error, setError] = useState('')
 
     const handleSubmit = () => {
-        if (form.title === '' || form.ingredients === '' || form.steps === ''){
+        if (form.title === '' || form.ingredients === '' || form.steps === '' || form.servings === ''){
             setError('Please fill all required fields.')
+            return
+        }
+        if (isNaN(form.servings) || !Number.isInteger(Number(form.servings)) || Number(form.servings) <= 0){
+            setError('Servings must be number greater than 0.')
             return
         }
         setError('')
@@ -28,7 +33,7 @@ function AddRecipe({ onRecipeAdded }) {
         .then(res => res.json())
         .then (() => {
             onRecipeAdded()
-            setForm ({title: '', ingredients: '', steps: '', notes: ''})
+            setForm ({title: '', ingredients: '', steps: '', notes: '', servings: ''})
         })
     }
 
@@ -57,6 +62,12 @@ function AddRecipe({ onRecipeAdded }) {
                 name = "notes"
                 placeholder = "Notes (optional)"
                 value = {form.notes}
+                onChange = {handleChange}
+            />
+            <input
+                name = "servings"
+                placeholder = "Servings"
+                value = {form.servings}
                 onChange = {handleChange}
             />
             {error && <p style = {{color: 'red'}}>{error}</p>}
