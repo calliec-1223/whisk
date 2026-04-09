@@ -1,14 +1,26 @@
 import { useState } from 'react'
 import Navbar from './Navbar'
+import {useNavigate} from 'react-router-dom'
 
-function AddRecipe({ onRecipeAdded, token }) {
+function AddRecipe() {
     const [form, setForm] = useState({
         title: '',
-        ingredients: '',
+        ingredients: [],
         steps: '',
         notes: '',
         servings: ''
     })
+
+    const [currentIngredient, setCurrentIngredient] = useState('')
+    const navigate = useNavigate()
+    const token = localStorage.getItem('token')
+
+    const handleAddIngredient = () =>{
+        if (currentIngredient === '') return
+        setForm({...form, ingredients: [...form.ingredients, currentIngredient]})
+        setCurrentIngredient('')
+    }
+
 
     const handleChange = (e) => {
         setForm({...form, [e.target.name]: e.target.value })
@@ -17,7 +29,7 @@ function AddRecipe({ onRecipeAdded, token }) {
     const [error, setError] = useState('')
 
     const handleSubmit = () => {
-        if (form.title === '' || form.ingredients === '' || form.steps === '' || form.servings === ''){
+        if (form.title === '' || form.ingredients.length === 0 || form.steps === '' || form.servings === ''){
             setError('Please fill all required fields.')
             return
         }
@@ -31,12 +43,16 @@ function AddRecipe({ onRecipeAdded, token }) {
             headers: { 'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(form)
+            body: JSON.stringify({
+                ...form, 
+                ingredients: form.ingredients.join('\n')
+            }
+            )
         })
         .then(res => res.json())
         .then (() => {
-            onRecipeAdded()
-            setForm ({title: '', ingredients: '', steps: '', notes: '', servings: ''})
+            navigate('/recipes')
+            setForm ({title: '', ingredients: [], steps: '', notes: '', servings: ''})
         })
     }
 
@@ -50,12 +66,22 @@ function AddRecipe({ onRecipeAdded, token }) {
                 value = {form.title}
                 onChange = {handleChange}
             />
-            <textarea
-                name = "ingredients"
-                placeholder = "Ingredients (one per line)"
-                value = {form.ingredients}
-                onChange = {handleChange}
+            <input
+                placeholder = "Add ingredient"
+                value = {currentIngredient}
+                onChange = {(e) => setCurrentIngredient(e.target.value)}
             />
+            <button onClick = {handleAddIngredient}>Add Ingredient</button>
+            <ul>
+                {form.ingredients.map((ing,index) => (
+                    <li key = {index} >
+                        {ing}
+                        <button onClick = {() => {
+                            setForm({...form, ingredients: form.ingredients.filter((_,i) => i !== index)})
+                        }}>x</button>
+                    </li>
+                ))}
+            </ul>
             <textarea
                 name = "steps"
                 placeholder = "Steps"
