@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Navbar from './Navbar'
 
 function AddRecipe({ onRecipeAdded, token }) {
     const [form, setForm] = useState({
@@ -41,6 +42,7 @@ function AddRecipe({ onRecipeAdded, token }) {
 
     return (
         <div>
+            <Navbar />
             <h2>Add a Recipe</h2>
             <input
                 name = "title"

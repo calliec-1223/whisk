@@ -1,12 +1,14 @@
 import {useState} from 'react'
+import {useNavigate} from 'react-router-dom'
 
 
-function Signup({ onSignup }) {
+function Signup({ }) {
     const [form, setForm] = useState({
         username: '',
         password: '',
         email: '',
     })
+    const navigate = useNavigate()
 
     const handleSignup = () => {
         fetch('http://127.0.0.1:5000/signup', {
@@ -16,7 +18,7 @@ function Signup({ onSignup }) {
         })
         .then (res => res.json())
         .then(() => {
-            onSignup()
+            navigate('/')
         })
     }
     const handleChange = (e) => {
@@ -24,6 +26,7 @@ function Signup({ onSignup }) {
     }
     return (
     <div>
+        <h2>Create an Account</h2>
         <input
             name = "username"
             placeholder = "Username"
@@ -43,6 +46,7 @@ function Signup({ onSignup }) {
             onChange = {handleChange}
         ></input>
         <button onClick={handleSignup}>Signup</button>
+        <p>Already have an account? <a href= "/">Login</a></p>
     </div>
 )
 }

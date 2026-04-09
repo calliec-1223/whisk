@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {useNavigate} from 'react-router-dom'
 
 
 function Login({ onLogin }) {
@@ -6,6 +7,7 @@ function Login({ onLogin }) {
         username: '',
         password: ''
     })
+    const navigate = useNavigate()
 
     const handleLogin = () => {
         fetch('http://127.0.0.1:5000/login', {
@@ -16,29 +18,32 @@ function Login({ onLogin }) {
         .then (res => res.json())
         .then(data => {
             localStorage.setItem('token', data.token)
-            onLogin()
+            navigate('/recipes')
         })
     }
     const handleChange = (e) => {
         setForm({...form, [e.target.name]: e.target.value })
     }
     return (
-    <div>
-        <input
-            name = "username"
-            placeholder = "Username"
-            value = {form.username}
-            onChange = {handleChange}
-        />
-        <input
-            name = "password"
-            placeholder = "Password"
-            value = {form.password}
-            onChange = {handleChange}
-        />
-        <button onClick={handleLogin}>Login</button>
-    </div>
-)
+        <div>
+            <h2>Login</h2>
+            <input 
+                name="username" 
+                placeholder="Username" 
+                value={form.username} 
+                onChange={handleChange}
+             />
+            <input 
+                name="password" 
+                placeholder="Password" 
+                type="password" 
+                value={form.password} 
+                onChange={handleChange} 
+                />
+            <button onClick={handleLogin}>Login</button>
+            <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        </div>
+    )
 }
 
 
