@@ -17,6 +17,14 @@ function AddRecipe() {
     const [showToast, setShowToast] = useState(false)
     const timerRef = useRef(null)
 
+    const moveStep = (index, direction) => {
+    const newSteps = [...form.steps]
+    const swapIndex = index + direction
+    if (swapIndex < 0 || swapIndex >= newSteps.length) return
+    ;[newSteps[index], newSteps[swapIndex]] = [newSteps[swapIndex], newSteps[index]]
+    setForm({...form, steps: newSteps})
+}
+
     useEffect(() => {
     return () => {
         if (timerRef.current) clearTimeout(timerRef.current)
@@ -118,9 +126,13 @@ function AddRecipe() {
     {form.steps.map((step, index) => (
         <li key={index}>
             <span><strong>{index + 1}.</strong> {step}</span>
-            <button onClick={() => {
-                setForm({...form, steps: form.steps.filter((_, i) => i !== index)})
-            }}>✕</button>
+            <div style={{display: 'flex', gap: '4px'}}>
+                <button onClick={() => moveStep(index, -1)}>↑</button>
+                <button onClick={() => moveStep(index, 1)}>↓</button>
+                <button onClick={() => {
+                    setForm({...form, steps: form.steps.filter((_, i) => i !== index)})
+                }}>✕</button>
+            </div>
         </li>
     ))}
 </ul>

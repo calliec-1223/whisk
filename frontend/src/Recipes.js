@@ -4,6 +4,11 @@ import RecipeList from './RecipeList'
 function Recipes() {
     const [recipes, setRecipes] = useState([])
     const token = localStorage.getItem('token')
+    const [search, setSearch] = useState('')
+
+    const filteredRecipes = recipes.filter(r =>
+    r.title.toLowerCase().includes(search.toLowerCase())
+)
 
     const fetchRecipes = () => {
         fetch('http://127.0.0.1:5000/recipes', {
@@ -40,7 +45,13 @@ return (
                 </div>
                 <span>→</span>
             </div>
-            <RecipeList recipes={recipes} onRecipeDeleted={fetchRecipes} token={token} />
+            <input
+    placeholder="Search recipes..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    style={{marginBottom: '20px'}}
+/>
+<RecipeList recipes={filteredRecipes} onRecipeDeleted={fetchRecipes} token={token} />
         </div>
     </div>
 )
