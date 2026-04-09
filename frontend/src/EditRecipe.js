@@ -9,7 +9,8 @@ function EditRecipe({recipe}) {
         ingredients: recipe.ingredients.split('\n'),
         steps: recipe.steps.split('\n'),
         notes: recipe.notes || '',
-        servings: recipe.servings
+        servings: recipe.servings,
+        category: recipe.category
     })
 
     const [currentIngredient, setCurrentIngredient] = useState('')
@@ -159,7 +160,18 @@ function EditRecipe({recipe}) {
                         value={form.servings}
                         onChange={handleChange}
                     />
-
+                    <label>Category</label>
+<select name="category" value={form.category} onChange={handleChange}>
+    <option value="">Select a category...</option>
+    <option value="cookies">Cookies</option>
+    <option value="cakes">Cakes</option>
+    <option value="bread">Bread</option>
+    <option value="muffins">Muffins</option>
+    <option value="pies">Pies & Tarts</option>
+    <option value="pastry">Pastry</option>
+    <option value="no-bake">No Bake</option>
+    <option value="other">Other</option>
+</select>
                     {error && <p style={{color: 'var(--primary)', marginBottom: '12px'}}>{error}</p>}
                     <button className="save-btn" onClick={handleSubmit}>Save Changes</button>
                     {showToast && <Toast message="Recipe updated!" onClose={() => setShowToast(false)} />}

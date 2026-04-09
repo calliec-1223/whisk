@@ -28,6 +28,8 @@ class Recipe (db.Model):
     notes = db.Column(db.String(200))
     servings = db.Column(db.Integer, nullable = False, default = 1)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
+    category = db.Column(db.String(50), nullable=True)
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
@@ -53,7 +55,9 @@ def get_recipes():
         'ingredients': r.ingredients,
         'steps': r.steps,
         'notes': r.notes,
-        'servings': r.servings
+        'servings': r.servings,
+        'category': r.category
+
     } for r in recipes ])
 
 @app.route('/recipes', methods = ['POST'])
@@ -67,7 +71,9 @@ def add_recipe():
         steps = data ['steps'],
         notes = data.get('notes', ''),
         servings = data ['servings'],
-        user_id = user_id
+        user_id = user_id,
+        category = data.get('category', '')
+
     )
     db.session.add(recipe)
     db.session.commit()
