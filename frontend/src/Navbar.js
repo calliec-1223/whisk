@@ -1,4 +1,5 @@
 import {Link, useNavigate} from 'react-router-dom'
+import './Navbar.css'
 
 function Navbar(){
     const navigate = useNavigate()
@@ -8,15 +9,16 @@ function Navbar(){
         navigate('/')
     }
     return (
-        <nav>
-            <Link to = "/recipes"> My Recipes</Link>
-            <Link to = "/add">Add Recipe</Link>
-            <Link to = "/convert">Convert Ingredients</Link>
-            <Link to = "/chat">Baking Assistant</Link>
-            <button onClick = {handleLogout}>Logout</button>
-
-        </nav>
-    )
+    <nav className="navbar">
+        <span className="navbar-brand">Whisk 🧁</span>
+        <div className="navbar-links">
+            <Link to="/recipes">My Recipes</Link>
+            <Link to="/add">Add Recipe</Link>
+            <Link to="/convert">Converter</Link>
+            <button className="navbar-logout" onClick={handleLogout}>Logout</button>
+        </div>
+    </nav>
+)
 }
 
 export default Navbar

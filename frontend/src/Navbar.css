@@ -1,0 +1,51 @@
+.navbar {
+  background: var(--card);
+  border-bottom: 1.5px solid var(--border);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.navbar-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navbar-links a {
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.navbar-links a:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.navbar-logout {
+  background: transparent;
+  color: var(--text-light);
+  border: 1.5px solid var(--border);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.navbar-logout:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+

@@ -4,7 +4,7 @@ import Signup from './Signup'
 import Recipes from './Recipes'
 import AddRecipe from './AddRecipe'
 import Converter from './Converter'
-import Chatbot from './Chatbot'
+import Layout from './Layout'
 
 function App() {
   const token = localStorage.getItem('token')
@@ -14,10 +14,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/recipes" element={token ? <Recipes /> : <Navigate to="/" />} />
-        <Route path="/add" element={token ? <AddRecipe /> : <Navigate to="/" />} />
-        <Route path="/convert" element={token ? <Converter /> : <Navigate to="/" />} />
-        <Route path="/chat" element={token ? <Chatbot /> : <Navigate to="/" />} />
+        <Route path="/recipes" element={token ? <Layout><Recipes /></Layout> : <Navigate to="/" />} />
+        <Route path="/add" element={token ? <Layout><AddRecipe /></Layout> : <Navigate to="/" />} />
+        <Route path="/convert" element={token ? <Layout><Converter /></Layout> : <Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   )
