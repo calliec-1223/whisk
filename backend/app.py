@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///whisk.db'
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
@@ -148,6 +148,23 @@ def login():
     token = create_access_token(identity=str(user.id))
     return jsonify({'token': token}), 200
 
+@app.route('/recipes/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_recipe(id):
+    user_id = get_jwt_identity()
+    recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
+    if not recipe:
+        return jsonify({'error': 'Recipe not found'}), 404
+    
+    data = request.get_json()
+    recipe.title = data['title']
+    recipe.ingredients = data['ingredients']
+    recipe.steps = data['steps']
+    recipe.notes = data.get('notes', '')
+    recipe.servings = data['servings']
+    
+    db.session.commit()
+    return jsonify({'message': 'Recipe updated!'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

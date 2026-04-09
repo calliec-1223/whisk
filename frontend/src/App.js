@@ -5,18 +5,23 @@ import Recipes from './Recipes'
 import AddRecipe from './AddRecipe'
 import Converter from './Converter'
 import Layout from './Layout'
+import EditRecipePage from './EditRecipePage'
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token')
+  return token ? children : <Navigate to="/" />
+}
 
 function App() {
-  const token = localStorage.getItem('token')
-
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/recipes" element={token ? <Layout><Recipes /></Layout> : <Navigate to="/" />} />
-        <Route path="/add" element={token ? <Layout><AddRecipe /></Layout> : <Navigate to="/" />} />
-        <Route path="/convert" element={token ? <Layout><Converter /></Layout> : <Navigate to="/" />} />
+        <Route path="/recipes" element={<ProtectedRoute><Layout><Recipes /></Layout></ProtectedRoute>} />
+        <Route path="/add" element={<ProtectedRoute><Layout><AddRecipe /></Layout></ProtectedRoute>} />
+        <Route path="/convert" element={<ProtectedRoute><Layout><Converter /></Layout></ProtectedRoute>} />
+        <Route path="/edit/:id" element={<ProtectedRoute><Layout><EditRecipePage /></Layout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )
