@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function AddRecipe({ onRecipeAdded }) {
+function AddRecipe({ onRecipeAdded, token }) {
     const [form, setForm] = useState({
         title: '',
         ingredients: '',
@@ -27,7 +27,9 @@ function AddRecipe({ onRecipeAdded }) {
         setError('')
         fetch('http://127.0.0.1:5000/recipes', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(form)
         })
         .then(res => res.json())

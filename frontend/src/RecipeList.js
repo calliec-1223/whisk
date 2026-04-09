@@ -1,6 +1,6 @@
 import {useState} from 'react'
 
-function RecipeList ({ recipes, onRecipeDeleted }){
+function RecipeList ({ recipes, onRecipeDeleted, token }){
     
     const [desiredServings, setDesiredServings] = useState({})
 
@@ -11,7 +11,8 @@ function RecipeList ({ recipes, onRecipeDeleted }){
     const handleDelete = (id) => {
         console.log('Deleting recipe:', id)
         fetch(`http://127.0.0.1:5000/recipes/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         .then(res => res.json())
         .then (() => {
