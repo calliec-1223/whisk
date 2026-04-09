@@ -39,7 +39,7 @@ function Converter (){
 
 
 return (
-    <div>
+    <div className = "page-enter" >
         <div className="converter-container">
             <div className="converter-card">
                 <h2>Ingredient Converter</h2>
@@ -98,6 +98,7 @@ return (
                 )}
             </div>
         </div>
+        
     </div>
 )
 }

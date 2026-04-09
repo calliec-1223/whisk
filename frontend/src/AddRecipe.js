@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {useNavigate} from 'react-router-dom'
 import './AddRecipe.css'
+import Toast from './Toast'
 
 function AddRecipe() {
     const [form, setForm] = useState({
@@ -13,6 +14,14 @@ function AddRecipe() {
 
     const [currentIngredient, setCurrentIngredient] = useState('')
     const [currentStep, setCurrentStep] = useState('')
+    const [showToast, setShowToast] = useState(false)
+    const timerRef = useRef(null)
+
+    useEffect(() => {
+    return () => {
+        if (timerRef.current) clearTimeout(timerRef.current)
+    }
+}, [])
 
     const handleAddStep = () => {
     if (currentStep === '') return
@@ -59,14 +68,21 @@ function AddRecipe() {
             )
         })
         .then(res => res.json())
-        .then (() => {
+.then(data => {
+    if (data.message === 'Recipe saved!') {
+        setShowToast(true)
+        timerRef.current = setTimeout(() => {
             navigate('/recipes')
-            setForm ({title: '', ingredients: [], steps: [], notes: '', servings: ''})
-        })
+        }, 1500)
+        setForm({title: '', ingredients: [], steps: [], notes: '', servings: ''})
+    } else {
+        setError('Something went wrong. Please try again.')
+    }
+})
     }
 
     return (
-    <div>
+    <div className = "page-enter">
         <div className="add-container">
             <div className="add-card">
                 <h2>Add a Recipe</h2>
@@ -116,6 +132,8 @@ function AddRecipe() {
                 
                 {error && <p style={{color: 'var(--primary)', marginBottom: '12px'}}>{error}</p>}
                 <button className="save-btn" onClick={handleSubmit}>Save Recipe 🧁</button>
+                {showToast && <Toast message="Recipe saved!" onClose={() => setShowToast(false)} />}
+
             </div>
         </div>
     </div>
