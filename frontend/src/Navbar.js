@@ -1,4 +1,4 @@
-import {Link, useNavigate} from 'react-router-dom'
+import {NavLink, useNavigate} from 'react-router-dom'
 import './Navbar.css'
 
 function Navbar(){
@@ -12,9 +12,9 @@ function Navbar(){
     <nav className="navbar">
         <span className="navbar-brand">Whisk 🧁</span>
         <div className="navbar-links">
-            <Link to="/recipes">My Recipes</Link>
-            <Link to="/add">Add Recipe</Link>
-            <Link to="/convert">Converter</Link>
+            <NavLink to="/recipes">My Recipes</NavLink>
+            <NavLink to="/add">Add Recipe</NavLink>
+            <NavLink to="/convert">Converter</NavLink>
             <button className="navbar-logout" onClick={handleLogout}>Logout</button>
         </div>
     </nav>
