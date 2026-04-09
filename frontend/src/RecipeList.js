@@ -1,9 +1,11 @@
 import {useState} from 'react'
 import './Recipes.css'
+import {useNavigate} from 'react-router-dom'
 
 function RecipeList ({ recipes, onRecipeDeleted, token }){
     
     const [desiredServings, setDesiredServings] = useState({})
+    const navigate = useNavigate()
 
     const handleServingsChange = (id, value) => {
         setDesiredServings({...desiredServings, [id]: value})
@@ -78,6 +80,10 @@ const toggleExpand = (id) => {
                                 onChange={(e) => handleServingsChange(recipe.id, e.target.value)}
                             />
                             <button className="delete-btn" onClick={() => handleDelete(recipe.id)}>Delete</button>
+                            <button onClick={(e) => {
+    e.stopPropagation()
+    navigate(`/edit/${recipe.id}`, { state: { recipe } })
+}}>Edit</button>
                         </div>
                         {desiredServings[recipe.id] && (
                             <p className="scale-result">

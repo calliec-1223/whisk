@@ -46,7 +46,7 @@ function AddRecipe() {
     const [error, setError] = useState('')
 
     const handleSubmit = () => {
-        if (form.title === '' || form.ingredients.length === 0 || form.steps === '' || form.servings === ''){
+        if (form.title === '' || form.ingredients.length === 0 || form.steps.length === 0 || form.servings === ''){
             setError('Please fill all required fields.')
             return
         }
