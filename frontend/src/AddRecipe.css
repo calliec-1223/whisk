@@ -1,0 +1,93 @@
+.add-container {
+  max-width: 700px;
+  margin: 24px auto;
+  padding: 0 24px 40px 24px;
+}
+
+.add-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+}
+
+.add-card h2 {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.add-card label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.ingredient-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ingredient-input-row input {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.ingredient-input-row button {
+  white-space: nowrap;
+  padding: 12px 20px;
+}
+
+.ingredient-list {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.ingredient-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.ingredient-list li button {
+  background: transparent;
+  color: var(--primary);
+  padding: 4px 8px;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+.ingredient-list li button:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.save-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.add-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 24px 60px 24px;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import RecipeList from './RecipeList'
-import Navbar from './Navbar'
 
 function Recipes() {
     const [recipes, setRecipes] = useState([])
@@ -20,11 +19,20 @@ function Recipes() {
 
     return (
         <div>
-            <Navbar />
-            <h2>My Recipes</h2>
+            <div className="recipes-container">
+            <h2>My Recipes 🧁</h2>
+            <div className="ai-banner" onClick={() => document.querySelector('.chat-fab').click()}>
+    <span>🧁</span>
+    <div>
+        <strong>Need baking help?</strong>
+        <p>Ask our AI assistant about your recipes, substitutions, or troubleshooting</p>
+    </div>
+    <span>→</span>
+</div>
             <RecipeList recipes={recipes} onRecipeDeleted={fetchRecipes} token={token} />
         </div>
-    )
+    </div>
+)
 }
 
 export default Recipes

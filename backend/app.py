@@ -120,8 +120,11 @@ def chat():
 def signup():
     data = request.get_json()
 
-    if User.query.filter_by(username = data['username']).first():
-        return jsonify({'error': 'Username already exists'}),400
+    if not data.get('username') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'All fields are required'}), 400
+    
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({'error': 'Username already exists'}), 400
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8') 
 
