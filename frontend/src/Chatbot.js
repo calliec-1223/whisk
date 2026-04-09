@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import Navbar from './Navbar'
 
 function Chatbot ({recipes}) {
     
@@ -24,6 +25,7 @@ function Chatbot ({recipes}) {
 }
     return (
         <div>
+            <Navbar />
             <h2>Baking Assistant</h2>
             {messages.map((msg,index) => (
                 <div key = {index}>

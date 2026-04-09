@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import INGREDIENTS from './ingredients'
+import Navbar from './Navbar'
 
 function Converter (){
     
@@ -38,6 +39,7 @@ function Converter (){
 
 return (
     <div>
+        <Navbar />
         <h2>Converter</h2>
         <input
             name = "ingredient"
