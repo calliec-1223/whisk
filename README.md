@@ -3,6 +3,7 @@
 A full-stack baking app. Save and organize recipes, convert baking units, and ask an AI assistant questions that draw on your saved recipes.
 
 **Live demo:** https://whisk-ten.vercel.app
+![Whisk screenshot](docs/screenshot.png)
 
 The backend runs on a free tier and sleeps when idle, so the first load after a quiet period can take up to a minute.
 
