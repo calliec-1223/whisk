@@ -10,8 +10,8 @@ The backend runs on a free tier and sleeps when idle, so the first load after a 
 
 - Account signup and login with JWT authentication and bcrypt password hashing
 - Create, edit, delete, and categorize recipes, stored per user
-- Ingredient unit converter
-- Baking assistant powered by Claude, using the user's saved recipes as context
+- Ingredient-aware unit converter (grams to cups, metric to US)
+- Baking assistant powered by Claude that can generate recipes and answer measurement and troubleshooting questions, using the user's saved recipes as context
 
 ## Tech stack
 
