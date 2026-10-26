@@ -1,3 +1,4 @@
+import API_URL from './config'
 import { useState, useEffect, useRef } from 'react'
 import {useNavigate} from 'react-router-dom'
 import './AddRecipe.css'
@@ -61,7 +62,7 @@ function EditRecipe({recipe}) {
             return
         }
         setError('')
-        fetch(`http://127.0.0.1:5000/recipes/${recipe.id}`, {
+        fetch(`${API_URL}/recipes/${recipe.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

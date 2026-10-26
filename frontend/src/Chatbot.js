@@ -1,3 +1,4 @@
+import API_URL from './config'
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import './Chatbot.css'
@@ -8,24 +9,40 @@ function Chatbot({ recipes = [] }) {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const handleSend = () => {
-        if (input === '') return
-        const userMessage = { role: 'user', content: input }
+        const handleSend = () => {
+        if (input.trim() === '') return
+        const sentText = input
+        const userMessage = { role: 'user', content: sentText }
         const updatedMessages = [...messages, userMessage]
         setMessages(updatedMessages)
         setInput('')
         setLoading(true)
 
-        fetch('http://127.0.0.1:5000/chat', {
+        const token = localStorage.getItem('token')
+
+        fetch(API_URL + '/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: input, recipes: recipes })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ message: sentText })
         })
-        .then(res => res.json())
-        .then(data => {
-            setMessages([...updatedMessages, { role: 'assistant', content: data.response }])
-            setLoading(false)
+        .then(res =>
+            res.json().catch(() => ({})).then(data => ({ ok: res.ok, status: res.status, data }))
+        )
+        .then(({ ok, status, data }) => {
+            let reply
+            if (ok) reply = data.response
+            else if (status === 401 || status === 422) reply = 'Please log in again to use the baking assistant.'
+            else if (status === 429) reply = "You've reached the chat limit for now. Please try again later."
+            else reply = data.error || 'Something went wrong. Please try again.'
+            setMessages([...updatedMessages, { role: 'assistant', content: reply }])
         })
+        .catch(() => {
+            setMessages([...updatedMessages, { role: 'assistant', content: 'Could not reach the server. Please try again.' }])
+        })
+        .finally(() => setLoading(false))
     }
 
     return (

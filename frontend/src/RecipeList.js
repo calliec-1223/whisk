@@ -1,3 +1,4 @@
+import API_URL from './config'
 import {useState} from 'react'
 import './Recipes.css'
 import {useNavigate} from 'react-router-dom'
@@ -13,7 +14,7 @@ function RecipeList ({ recipes, onRecipeDeleted, token }){
     
     const handleDelete = (id) => {
         console.log('Deleting recipe:', id)
-        fetch(`http://127.0.0.1:5000/recipes/${id}`, {
+        fetch(`${API_URL}/recipes/${id}`, {
             method: 'DELETE',
             headers: {'Authorization': `Bearer ${token}`}
         })

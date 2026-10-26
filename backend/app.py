@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 from conversions import convert
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -11,21 +14,33 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///whisk.db'
+FRONTEND_ORIGIN = os.getenv('FRONTEND_ORIGIN', 'http://localhost:3000')
+CORS(app, resources={r"/*": {"origins": [FRONTEND_ORIGIN], "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
+
+db_url = os.getenv('DATABASE_URL', 'sqlite:///whisk.db')
+if db_url.startswith('postgres://'):
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+if not app.config['JWT_SECRET_KEY']:
+    raise RuntimeError('JWT_SECRET_KEY is not set')
 
-db = SQLAlchemy (app)
+db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+limiter = Limiter(get_remote_address, app=app,
+                  default_limits=["2000 per day", "300 per hour"],
+                  storage_uri="memory://")
 
 class Recipe (db.Model):
     id = db.Column(db.Integer, primary_key = True)
     title = db.Column(db.String(100), nullable = False)
     ingredients = db.Column(db.Text, nullable = False)
     steps = db.Column(db.Text, nullable = False)
-    notes = db.Column(db.String(200))
+    notes = db.Column(db.Text)
     servings = db.Column(db.Integer, nullable = False, default = 1)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
     category = db.Column(db.String(50), nullable=True)
@@ -41,6 +56,7 @@ with app.app_context():
     db.create_all()
 
 @app.route('/ping')
+@limiter.exempt
 def ping():
     return {"message": "Whisk backend is running!"}
 
@@ -100,27 +116,36 @@ def convert_ingredient():
     )
     return jsonify(result)
 
-@app.route('/chat', methods = ['POST'])
+@app.route('/chat', methods=['POST'])
+@limiter.limit("20 per hour")
+@jwt_required()
 def chat():
-    data = request.get_json()
-    user_message = data['message']
-    recipes = data.get('recipes', [])
+    data = request.get_json() or {}
+    user_message = (data.get('message') or '').strip()
+    if not user_message or len(user_message) > 1000:
+        return jsonify({'error': 'Message must be 1 to 1000 characters'}), 400
 
+    user_id = get_jwt_identity()
+    recipes = Recipe.query.filter_by(user_id=user_id).limit(10).all()
     recipe_context = "\n".join([
-        f"- {r['title']} ({r['servings']} servings): {r['ingredients']}"
+        f"- {r.title} ({r.servings} servings): {r.ingredients[:300]}"
         for r in recipes
     ])
 
-    client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-    response = client.messages.create(
-        model = "claude-sonnet-4-20250514",
-        max_tokens=1024,
-        system= f"""You are a helpful baking assistant.
-        The user has these recipes saved: {recipe_context}
-        Help them with baking questions, troubleshooting, and suggestions.""",
-        messages = [{"role": "user", "content": user_message}]
-    )
-    return jsonify({'response': response.content[0].text})
+    try:
+        client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+        response = client.messages.create(
+            model="claude-haiku-5-5",
+            max_tokens=600,
+            system=f"""You are a helpful baking assistant.
+            The user has these recipes saved: {recipe_context}
+            Help them with baking questions, troubleshooting, and suggestions.""",
+            messages=[{"role": "user", "content": user_message}]
+        )
+        return jsonify({'response': response.content[0].text})
+    except Exception:
+        app.logger.exception('Claude API call failed')
+        return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
 
 @app.route ('/signup', methods = ['POST'])
 def signup():
@@ -131,6 +156,9 @@ def signup():
     
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username already exists'}), 400
+    
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': 'Email already registered'}), 400
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8') 
 

@@ -1,3 +1,4 @@
+import API_URL from './config'
 import { useState, useEffect, useRef } from 'react'
 import {useNavigate} from 'react-router-dom'
 import './AddRecipe.css'
@@ -64,7 +65,7 @@ function AddRecipe() {
             return
         }
         setError('')
-        fetch('http://127.0.0.1:5000/recipes', {
+        fetch(API_URL + '/recipes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`

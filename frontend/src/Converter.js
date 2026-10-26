@@ -1,3 +1,4 @@
+import API_URL from './config'
 import {useState} from 'react'
 import INGREDIENTS from './ingredients'
 import './Converter.css'
@@ -27,7 +28,7 @@ function Converter (){
     }
 
     const handleConversion = () => {
-        fetch('http://127.0.0.1:5000/convert', {
+        fetch(API_URL + '/convert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json'},
             body: JSON.stringify({...form, 

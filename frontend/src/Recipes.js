@@ -1,3 +1,4 @@
+import API_URL from './config'
 import { useEffect, useState } from 'react'
 import RecipeList from './RecipeList'
 
@@ -15,7 +16,7 @@ function Recipes() {
 })
 
     const fetchRecipes = () => {
-        fetch('http://127.0.0.1:5000/recipes', {
+        fetch(API_URL + '/recipes', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => res.json())
