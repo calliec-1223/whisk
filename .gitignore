@@ -3,4 +3,5 @@ __pycache__/
 node_modules/
 *.pyc
 .DS_Store
-backend/whisk.db
+backend/whisk.db*.db
+instance/
