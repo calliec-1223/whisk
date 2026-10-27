@@ -8,8 +8,8 @@ function Toast({ message, onClose }) {
     }, [onClose])
 
     return (
-        <div className="toast">
-            <span>🧁</span> {message}
+        <div className="toast" role="status">
+            {message}
         </div>
     )
 }

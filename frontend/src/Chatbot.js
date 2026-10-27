@@ -1,54 +1,72 @@
 import { useState } from 'react'
+import { authFetch } from './api'
+import { useChat } from './ChatContext'
 import ReactMarkdown from 'react-markdown'
 import './Chatbot.css'
 
-function Chatbot({ recipes = [] }) {
-    const [isOpen, setIsOpen] = useState(false)
+function Chatbot() {
+    const { isOpen, setIsOpen } = useChat()
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
 
     const handleSend = () => {
-        if (input === '') return
-        const userMessage = { role: 'user', content: input }
+        const text = input.trim()
+        if (text === '' || loading) return
+        const userMessage = { role: 'user', content: text }
         const updatedMessages = [...messages, userMessage]
         setMessages(updatedMessages)
         setInput('')
         setLoading(true)
 
-        fetch('http://127.0.0.1:5000/chat', {
+        const reply = (content) => setMessages([...updatedMessages, { role: 'assistant', content }])
+
+        authFetch('/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: input, recipes: recipes })
+            body: JSON.stringify({ message: text })
         })
-        .then(res => res.json())
+        .then(res => {
+            // The rate limiter replies with HTML, not JSON
+            if (res.status === 429) {
+                return { error: "You've hit the hourly question limit. Try again later." }
+            }
+            return res.json()
+        })
         .then(data => {
-            setMessages([...updatedMessages, { role: 'assistant', content: data.response }])
-            setLoading(false)
+            if (data.response) {
+                reply(data.response)
+            } else {
+                reply(data.error || 'Something went wrong. Please try again.')
+            }
         })
+        .catch(() => reply("Can't reach the server. Please try again."))
+        .finally(() => setLoading(false))
     }
 
     return (
         <>
-            {/* Floating button */}
-            <button className="chat-fab" onClick={() => setIsOpen(!isOpen)}>
-                {isOpen ? '✕' : '🧁'}
+            <button
+                className="chat-fab"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+            >
+                {isOpen ? 'Close' : 'Assistant'}
             </button>
 
-            {/* Chat popup */}
             {isOpen && (
-                <div className="chat-widget">
+                <div className="chat-widget" role="dialog" aria-label="Assistant">
                     <div className="chat-widget-header">
-                        <h3>Baking Assistant</h3>
-                        <p>ask me anything 🫙</p>
+                        <p className="eyebrow"><span className="label-dot" aria-hidden="true" /> Assistant</p>
+                        <h3>Baking questions</h3>
+                        <p>Can see the recipes you've saved.</p>
                     </div>
                     <div className="chat-messages">
                         {messages.length === 0 && (
-                            <p className="chat-empty">Hi! I'm your baking assistant. Ask me anything about your recipes or baking in general!</p>
+                            <p className="chat-empty">Ask about a recipe, a substitution, or a bake that didn't turn out.</p>
                         )}
                         {messages.map((msg, index) => (
                             <div key={index} className={`chat-message ${msg.role}`}>
-                                <span className="message-label">{msg.role === 'user' ? 'You' : 'Whisk AI'}</span>
+                                <span className="message-label">{msg.role === 'user' ? 'You' : 'Assistant'}</span>
                                 <div className="message-bubble">
                                     {msg.role === 'assistant'
                                         ? <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -59,8 +77,8 @@ function Chatbot({ recipes = [] }) {
                         ))}
                         {loading && (
                             <div className="chat-message assistant">
-                                <span className="message-label">Whisk AI</span>
-                                <div className="message-bubble loading-bubble">
+                                <span className="message-label">Assistant</span>
+                                <div className="message-bubble loading-bubble" aria-label="Loading">
                                     <span className="dot"></span>
                                     <span className="dot"></span>
                                     <span className="dot"></span>
@@ -70,12 +88,13 @@ function Chatbot({ recipes = [] }) {
                     </div>
                     <div className="chat-input-row">
                         <input
-                            placeholder="Ask a baking question..."
+                            placeholder="Ask a question"
+                            aria-label="Message"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()}
                         />
-                        <button className="chat-send-btn" onClick={handleSend}>Send</button>
+                        <button onClick={handleSend}>Send</button>
                     </div>
                 </div>
             )}

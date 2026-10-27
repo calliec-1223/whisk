@@ -9,16 +9,16 @@ function Navbar(){
         navigate('/')
     }
     return (
-    <nav className="navbar">
-        <span className="navbar-brand">Whisk 🧁</span>
-        <div className="navbar-links">
-            <NavLink to="/recipes">My Recipes</NavLink>
-            <NavLink to="/add">Add Recipe</NavLink>
-            <NavLink to="/convert">Converter</NavLink>
-            <button className="navbar-logout" onClick={handleLogout}>Logout</button>
-        </div>
-    </nav>
-)
+        <nav className="navbar">
+            <span className="navbar-brand">Whisk</span>
+            <div className="navbar-links">
+                <NavLink to="/recipes">Recipes</NavLink>
+                <NavLink to="/add">Add recipe</NavLink>
+                <NavLink to="/convert">Converter</NavLink>
+            </div>
+            <button className="navbar-logout btn-secondary" onClick={handleLogout}>Log out</button>
+        </nav>
+    )
 }
 
 export default Navbar

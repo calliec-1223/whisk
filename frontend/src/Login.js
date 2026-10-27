@@ -1,18 +1,21 @@
 import {useState} from 'react'
-import {useNavigate} from 'react-router-dom'
-import './Login.css'
+import { apiFetch } from './api'
+import { Link, useNavigate } from 'react-router-dom'
+import './Auth.css'
+import { BrushRing, HandUnderline } from './icons'
 
 function Login({ onLogin }) {
     const [form, setForm] = useState({
         username: '',
         password: ''
     })
+    const [error, setError] = useState('')
     const navigate = useNavigate()
 
     const handleLogin = () => {
-        fetch('http://127.0.0.1:5000/login', {
+        setError('')
+        apiFetch('/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
             body: JSON.stringify(form)
         })
         .then (res => res.json())
@@ -20,35 +23,46 @@ function Login({ onLogin }) {
             if (data.token){
                 localStorage.setItem('token', data.token)
                 navigate('/recipes')
+            } else {
+                setError(data.error || 'Something went wrong. Please try again.')
             }
         })
+        .catch(() => setError("Can't reach the server. Please try again."))
     }
     const handleChange = (e) => {
         setForm({...form, [e.target.name]: e.target.value })
     }
     return (
-    <div className="login-container">
-        <div className="login-card">
-            <h1>Whisk 🧁</h1>
-            <p className="subtitle">your cozy baking companion</p>
-            <input 
-                name="username" 
-                placeholder="Username" 
-                value={form.username} 
-                onChange={handleChange}
-            />
-            <input 
-                name="password" 
-                placeholder="Password" 
-                type="password" 
-                value={form.password} 
-                onChange={handleChange} 
-            />
-            <button onClick={handleLogin}>Login</button>
-            <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        <div className="auth-container">
+            <BrushRing className="auth-ring" />
+            <div className="auth-card">
+                <h1>Whisk</h1>
+                <HandUnderline className="auth-underline" />
+                <p className="page-subtitle">Log in to your recipes.</p>
+                <label htmlFor="login-username">Username</label>
+                <input
+                    id="login-username"
+                    name="username"
+                    autoComplete="username"
+                    value={form.username}
+                    onChange={handleChange}
+                />
+                <label htmlFor="login-password">Password</label>
+                <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={form.password}
+                    onChange={handleChange}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                />
+                {error && <p className="form-error">{error}</p>}
+                <button onClick={handleLogin}>Log in</button>
+                <p className="auth-switch">No account yet? <Link to="/signup">Sign up</Link></p>
+            </div>
         </div>
-    </div>
-)
+    )
 }
 
 

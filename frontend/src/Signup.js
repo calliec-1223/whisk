@@ -1,9 +1,11 @@
 import {useState} from 'react'
-import {useNavigate} from 'react-router-dom'
-import './Signup.css'
+import { apiFetch } from './api'
+import { Link, useNavigate } from 'react-router-dom'
+import './Auth.css'
+import { BrushRing, HandUnderline } from './icons'
 
 
-function Signup({ }) {
+function Signup() {
     const [form, setForm] = useState({
         username: '',
         password: '',
@@ -17,9 +19,8 @@ function Signup({ }) {
             return
         }
 
-        fetch('http://127.0.0.1:5000/signup', {
+        apiFetch('/signup', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
             body: JSON.stringify(form)
         })
         .then (res => res.json())
@@ -38,36 +39,45 @@ function Signup({ }) {
     const [error, setError] = useState('')
 
     return (
-    <div className="signup-container">
-        <div className="signup-card">
-            <h1>Whisk 🧁</h1>
-            <p className="subtitle">create your baking account</p>
-            <input
-                name="username"
-                placeholder="Username"
-                value={form.username}
-                onChange={handleChange}
-            />
-            <input
-                name="email"
-                placeholder="Email Address"
-                value={form.email}
-                onChange={handleChange}
-            />
-            <input
-                name="password"
-                placeholder="Password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-            />
-            {error && <p style={{color: 'var(--primary)', marginBottom: '12px', fontSize: '13px'}}>{error}</p>}
-
-            <button onClick={handleSignup}>Create Account</button>
-            <p>Already have an account? <a href="/">Login</a></p>
+        <div className="auth-container">
+            <BrushRing className="auth-ring" />
+            <div className="auth-card">
+                <h1>Whisk</h1>
+                <HandUnderline className="auth-underline" />
+                <p className="page-subtitle">Create an account to save your recipes.</p>
+                <label htmlFor="signup-username">Username</label>
+                <input
+                    id="signup-username"
+                    name="username"
+                    autoComplete="username"
+                    value={form.username}
+                    onChange={handleChange}
+                />
+                <label htmlFor="signup-email">Email</label>
+                <input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={handleChange}
+                />
+                <label htmlFor="signup-password">Password</label>
+                <input
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={form.password}
+                    onChange={handleChange}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
+                />
+                {error && <p className="form-error">{error}</p>}
+                <button onClick={handleSignup}>Create account</button>
+                <p className="auth-switch">Already have an account? <Link to="/">Log in</Link></p>
+            </div>
         </div>
-    </div>
-)
+    )
 }
 
 

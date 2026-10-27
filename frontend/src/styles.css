@@ -1,84 +1,315 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap');
-
+/* Design tokens. Every component stylesheet uses these. */
+/* Design tokens. Every component stylesheet uses these. */
 :root {
-  --bg: #f5ede0;
-  --card: #fdf8f2;
-  --primary: #b87c7c;
-  --primary-dark: #9e6262;
-  --accent: #7a9e73;
-  --text: #2d1f14;
-  --text-light: #6b4c3b;
-  --border: #d4b8a8;
-  --shadow: 0 4px 20px rgba(45, 31, 20, 0.1);
-  --radius: 16px;
+  /* Bakery palette: chocolate, blush cream, caramel */
+  --bg: #f6eee8;
+  --surface: #fdf9f6;
+  --surface-sunken: #f1e6de;
+  --text: #33241b;
+  --text-muted: #7b6559;
+  --border: #eadcd2;
+  --border-strong: #d8c4b6;
+  --accent: #c69a6d;
+  --accent-hover: #b78a5c;
+  --accent-soft: #f0e2d5;
+  --on-accent: #2f2018; /* text on filled buttons */
+  --link: #8a5a33;      /* caramel dark enough to read on cream */
+  --danger: #94394c;
+  --choc: #3c2a1f;
+  --on-choc: #f3e7dd;
+  --on-choc-muted: #cdb6a5;
+  --mauve: #8b4a62;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --h1: clamp(2.25rem, 1.7rem + 2.6vw, 3.5rem);
+  --h2: clamp(1.625rem, 1.4rem + 1.1vw, 2.25rem);
+  --h3: clamp(1.1875rem, 1.1rem + 0.45vw, 1.5rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --radius: 6px;
+  --radius-lg: 12px;
+  --tap: 2.75rem; /* minimum touch target */
+  --card-shadow: 0 8px 22px rgba(60, 42, 31, 0.07);
+  --shadow-float: 0 12px 32px rgba(60, 42, 31, 0.18);
+  --page-width: 44rem;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
-  font-family: 'Lato', sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
   min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.15;
   color: var(--text);
+  text-wrap: balance;
 }
 
-input, textarea, select {
+h1 { font-size: var(--h1); }
+h2 { font-size: var(--h2); }
+h3 { font-size: var(--h3); }
+
+p, li {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Forms ---------- */
+
+/* Small uppercase labels: form labels, buttons and metadata share this style */
+label,
+button,
+.button,
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-muted);
+}
+
+.label-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--mauve);
+  flex-shrink: 0;
+}
+
+input,
+select,
+textarea {
+  display: block;
   width: 100%;
-  padding: 12px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  background: var(--card);
+  min-height: var(--tap);
+  padding: 0.625rem 0.75rem;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
   color: var(--text);
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
+  font: inherit;
+  font-size: 1rem; /* 16px keeps iOS from zooming on focus */
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input::placeholder {
+  color: #9a9388;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
   outline: none;
-  transition: border-color 0.2s;
-  margin-bottom: 12px;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-input:focus, textarea:focus, select:focus {
-  border-color: var(--primary);
-}
-
-button {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-family: 'Lato', sans-serif;
-  font-size: 14px;
+input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
   cursor: pointer;
-  transition: background 0.2s;
 }
 
-button:hover {
-  background: var(--primary-dark);
+.form-error {
+  color: var(--danger);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
 }
 
-a {
-  color: var(--primary);
+/* ---------- Buttons and links ---------- */
+
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  padding: 0.5rem 1.125rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--on-accent);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+button:hover,
+.button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--on-accent);
   text-decoration: none;
 }
 
+button:disabled,
+button:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-secondary:disabled:hover {
+  background: transparent;
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.15em;
+}
+
 a:hover {
-  text-decoration: underline;
+  color: var(--text);
+}
+
+/* ---------- Layout ---------- */
+
+.add-container,
+.converter-container,
+.recipes-container {
+  width: min(100% - 2 * var(--gutter), var(--page-width));
+  margin-inline: auto;
+  padding-block: clamp(1.5rem, 5vw, 3rem) 6rem; /* bottom room for the chat button */
+}
+
+/* A container that rides up over the page header, like a card laid on the band */
+.pulled-up {
+  position: relative;
+  z-index: 1;
+  margin-top: calc(-1 * clamp(2.5rem, 6vw, 3.5rem));
+  padding-top: 0;
+}
+
+.card,
+.add-card,
+.converter-card,
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+}
+
+.circle-arrow {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  color: var(--choc);
+  transition: transform 0.2s ease;
+}
+
+.circle-arrow.open {
+  transform: rotate(90deg);
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+.muted {
+  color: var(--text-muted);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .page-enter {
-  animation: fadeIn 0.4s ease forwards;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
