@@ -47,7 +47,7 @@ class Recipe (db.Model):
     title = db.Column(db.String(100), nullable = False)
     ingredients = db.Column(db.Text, nullable = False)
     steps = db.Column(db.Text, nullable = False)
-    notes = db.Column(db.String(200))
+    notes = db.Column(db.Text)
     servings = db.Column(db.Integer, nullable = False, default = 1)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False, index = True)
     category = db.Column(db.String(50), nullable=True)
@@ -115,6 +115,7 @@ def recipe_to_dict(r):
     }
 
 @app.route('/ping')
+@limiter.exempt
 def ping():
     return {"message": "Whisk backend is running!"}
 

@@ -1,5 +1,8 @@
 export const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000'
 
+// Start waking the free-tier backend as soon as the app loads
+fetch(`${API_URL}/ping`).catch(() => {})
+
 // Fetch an API route. Sends and expects JSON.
 export function apiFetch(path, options = {}) {
     return fetch(`${API_URL}${path}`, {
