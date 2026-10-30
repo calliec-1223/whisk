@@ -10,8 +10,15 @@ import chat_queue
 def fake_queue(monkeypatch):
     jobs = {}  # job_id -> history record, as taskqueue.results.get_job returns it
 
-    def submit(user_id, message, recipe_context):
+    keys = {}
+
+    def submit(user_id, message, recipe_context, request_id=None):
+        key = (user_id, request_id)
+        if request_id and key in keys:  # same behavior as the real idempotency key
+            return keys[key]
         job_id = f"00000000-0000-0000-0000-{len(jobs) + 1:012d}"
+        if request_id:
+            keys[key] = job_id
         jobs[job_id] = {"status": "pending", "result": None, "last_error": None,
                         "payload": {"task": "whisk_chat", "user_id": str(user_id),
                                     "args": {"message": message, "recipe_context": recipe_context}}}
@@ -110,3 +117,18 @@ def test_answer_skips_thinking_blocks(monkeypatch):
     monkeypatch.setattr(assistant.anthropic, "Anthropic", lambda **kwargs: fake_client)
     monkeypatch.delenv("WHISK_FAKE_CLAUDE", raising=False)
     assert assistant.ask_claude("why flat?", "") == "Chill the dough. Use less butter."
+
+
+def test_resent_message_returns_same_job(client, auth_headers, fake_queue):
+    body = {"message": "Why flat?", "request_id": "msg-123"}
+    first = client.post("/chat", json=body, headers=auth_headers).get_json()["job_id"]
+    second = client.post("/chat", json=body, headers=auth_headers).get_json()["job_id"]
+    assert first == second
+    assert len(fake_queue) == 1
+
+
+def test_bad_request_id_rejected(client, auth_headers, fake_queue):
+    res = client.post("/chat", json={"message": "hi", "request_id": "x" * 101}, headers=auth_headers)
+    assert res.status_code == 400
+    res = client.post("/chat", json={"message": "hi", "request_id": 5}, headers=auth_headers)
+    assert res.status_code == 400

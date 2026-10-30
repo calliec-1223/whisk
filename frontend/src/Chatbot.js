@@ -50,7 +50,9 @@ function Chatbot() {
 
         authFetch('/chat', {
             method: 'POST',
-            body: JSON.stringify({ message: text })
+            // A unique id per message: if this request is ever sent twice, the
+            // server returns the same answer instead of asking Claude again.
+            body: JSON.stringify({ message: text, request_id: crypto.randomUUID() })
         })
         .then(res => {
             // The rate limiter replies with HTML, not JSON

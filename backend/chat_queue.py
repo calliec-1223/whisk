@@ -32,11 +32,18 @@ def queue() -> Queue:
     return _queue
 
 
-def submit(user_id: str, message: str, recipe_context: str) -> str:
-    """Enqueue a chat question. Returns the job id."""
+def submit(user_id: str, message: str, recipe_context: str, request_id: str | None = None) -> str:
+    """Enqueue a chat question. Returns the job id.
+
+    request_id: a unique id the browser makes for each message. If the same
+    message is sent again (e.g. a retried request), the original job is
+    returned instead of asking Claude twice. Keys include the user id, so one
+    user's id can never match another user's job.
+    """
     payload = {"task": TASK, "args": {"message": message, "recipe_context": recipe_context},
                "user_id": str(user_id)}  # stored so only this user can read the answer
-    return queue().enqueue(payload, max_attempts=MAX_ATTEMPTS)
+    key = f"chat:{user_id}:{request_id}" if request_id else None
+    return queue().enqueue(payload, max_attempts=MAX_ATTEMPTS, idempotency_key=key)
 
 
 def lookup(job_id: str) -> dict | None:

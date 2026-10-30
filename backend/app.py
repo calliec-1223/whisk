@@ -215,8 +215,13 @@ def chat():
             app.logger.exception('Claude API call failed')
             return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
 
+    # Optional per-message id from the browser, used to ignore duplicate submissions.
+    request_id = data.get('request_id')
+    if request_id is not None and (not isinstance(request_id, str) or not 1 <= len(request_id) <= 100):
+        return jsonify({'error': 'Invalid request_id'}), 400
+
     try:
-        job_id = chat_queue.submit(user_id, user_message, recipe_context)
+        job_id = chat_queue.submit(user_id, user_message, recipe_context, request_id)
     except Exception:
         app.logger.exception('Could not enqueue chat job')
         return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
