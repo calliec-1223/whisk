@@ -3,7 +3,7 @@ import { authFetch } from './api'
 import './Recipes.css'
 import {useNavigate} from 'react-router-dom'
 import { CATEGORIES } from './categories'
-import { ArrowIcon } from './icons'
+import { ChevronIcon } from './icons'
 
 const categoryLabel = (value) => CATEGORIES.find(c => c.value === value)?.label
 
@@ -31,41 +31,36 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
     }
 
     return (
-        <div>
-            {recipes.length === 0 && (
-                <p className="empty-state">No recipes to show.</p>
-            )}
+        <div className="card-stack">
             {recipes.map(recipe => (
-                <div key={recipe.id} className="recipe-card" onClick={() => toggleExpand(recipe.id)}>
-                    <div className="recipe-card-top">
-                        <div className="recipe-card-title">
-                            <input
-                                type="checkbox"
-                                aria-label={`Add ${recipe.title} to shopping list`}
-                                checked={selectedRecipes.some(r => r.id === recipe.id)}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={() => onToggleSelect(recipe)}
-                            />
-                            <div>
-                                {categoryLabel(recipe.category) && (
-                                    <span className="recipe-category">
-                                        <span className="label-dot" aria-hidden="true" />
-                                        {categoryLabel(recipe.category)}
-                                    </span>
-                                )}
-                                <h3>{recipe.title}</h3>
-                            </div>
-                        </div>
-                        <div className="recipe-card-meta">
-                            <span className="recipe-servings">Serves {recipe.servings}</span>
-                            <span className={`circle-arrow${expanded[recipe.id] ? ' open' : ''}`} aria-hidden="true">
-                                <ArrowIcon />
-                            </span>
-                        </div>
+                <article key={recipe.id} className={`index-card${expanded[recipe.id] ? ' open' : ''}`}>
+                    <div className="card-head">
+                        <input
+                            type="checkbox"
+                            aria-label={`Add ${recipe.title} to shopping list`}
+                            checked={selectedRecipes.some(r => r.id === recipe.id)}
+                            onChange={() => onToggleSelect(recipe)}
+                        />
+                        <h3>
+                            <button
+                                type="button"
+                                className="card-toggle"
+                                aria-expanded={!!expanded[recipe.id]}
+                                aria-controls={`recipe-${recipe.id}`}
+                                onClick={() => toggleExpand(recipe.id)}
+                            >
+                                <span>{recipe.title}</span>
+                                <ChevronIcon className="card-chevron" />
+                            </button>
+                        </h3>
                     </div>
+                    <p className="card-meta">
+                        {categoryLabel(recipe.category) && <span>{categoryLabel(recipe.category)}</span>}
+                        <span>Serves {recipe.servings}</span>
+                    </p>
 
                     {expanded[recipe.id] && (
-                        <div className="recipe-details" onClick={(e) => e.stopPropagation()}>
+                        <div className="recipe-details" id={`recipe-${recipe.id}`}>
                             <div className="recipe-section">
                                 <h4>Ingredients</h4>
                                 <ul className="ingredient-display-list">
@@ -97,12 +92,13 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                                     onChange={(e) => handleServingsChange(recipe.id, e.target.value)}
                                 />
                                 <button
-                                    className="btn-secondary"
+                                    type="button"
+                                    className="rb-ghost"
                                     onClick={() => navigate(`/edit/${recipe.id}`, { state: { recipe } })}
                                 >
                                     Edit
                                 </button>
-                                <button className="btn-danger" onClick={() => handleDelete(recipe.id)}>Delete</button>
+                                <button type="button" className="rb-ghost rb-danger" onClick={() => handleDelete(recipe.id)}>Delete</button>
                             </div>
                             {desiredServings[recipe.id] && (
                                 <p className="scale-result">
@@ -111,7 +107,7 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                             )}
                         </div>
                     )}
-                </div>
+                </article>
             ))}
         </div>
     )

@@ -1,12 +1,26 @@
-.chat-fab {
+button.chat-fab {
   position: fixed;
   right: var(--gutter);
   bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
   z-index: 1000;
   min-height: 3rem;
   padding: 0 var(--space-5);
+  border: 1px solid var(--rb-jam);
   border-radius: 999px;
-  box-shadow: var(--shadow-float);
+  background: var(--rb-jam);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(58, 35, 33, 0.18);
+  font-family: var(--rb-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+button.chat-fab:hover {
+  background: var(--rb-jam-dark);
+  border-color: var(--rb-jam-dark);
+  color: #fff;
 }
 
 .chat-widget {

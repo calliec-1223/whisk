@@ -45,6 +45,20 @@
   --card-shadow: 0 8px 22px rgba(60, 42, 31, 0.07);
   --shadow-float: 0 12px 32px rgba(60, 42, 31, 0.18);
   --page-width: 44rem;
+
+  /* Recipe box redesign (recipes page, nav, chat button). Other pages still use the tokens above. */
+  --rb-box: #f8ece9;      /* page: strawberry-milk pink */
+  --rb-tin: #efd8d3;      /* inside the recipe box, active tab */
+  --rb-tab: #f3e2de;      /* inactive divider tabs */
+  --rb-paper: #fffdfb;    /* index cards */
+  --rb-ink: #3a2321;
+  --rb-crumb: #735550;    /* muted text, readable on tin */
+  --rb-jam: #b23a48;
+  --rb-jam-dark: #962e3b;
+  --rb-rule: #e6d1cc;
+  --rb-line: #d9e1ea;     /* blue index-card lines */
+  --rb-serif: "Young Serif", Georgia, serif;
+  --rb-sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 *,

@@ -4,10 +4,9 @@ import { authFetch } from './api'
 import RecipeList from './RecipeList'
 import { CATEGORIES } from './categories'
 import { useChat } from './ChatContext'
-import { ArrowIcon } from './icons'
-import PageHero from './PageHero'
 
 const PAGE_SIZE = 10
+const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
 
 function Recipes() {
     const [recipes, setRecipes] = useState([])
@@ -57,77 +56,104 @@ function Recipes() {
     useEffect(() => {
         fetchRecipes()
     }, [])
+    const chooseCategory = (value) => {
+        setCategoryFilter(value)
+        setPage(1)
+    }
+
+    const emptyText = recipes.length === 0
+        ? 'No recipes yet. Add your first one with New recipe.'
+        : 'No recipes match. Try another search or category.'
+
     return (
         <div className="page-enter recipes-page">
-            <PageHero
-                title="Recipes"
-                meta={`${recipes.length} saved`}
-                action={<Link to="/add" className="button">New recipe</Link>}
-            />
-
             <div className="recipes-container">
-                <button
-                    type="button"
-                    className="assistant-prompt"
-                    onClick={() => setChatOpen(true)}
-                >
-                    <span className="assistant-prompt-label">
-                        <span className="label-dot" aria-hidden="true" />
-                        Baking questions
-                    </span>
-                    <span className="assistant-prompt-text">Ask the assistant about substitutions, timing, or what went wrong.</span>
-                    <span className="circle-arrow"><ArrowIcon /></span>
-                </button>
+                <header className="box-header">
+                    <div>
+                        <h1>Recipes</h1>
+                        <p className="box-count">{recipes.length} saved</p>
+                    </div>
+                    <Link to="/add" className="rb-button">New recipe</Link>
+                </header>
 
-                <div className="recipe-filters">
+                <div className="box-tools">
                     <input
+                        type="search"
+                        className="box-search"
                         placeholder="Search recipes"
                         aria-label="Search recipes"
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                     />
-                    <select
-                        aria-label="Filter by category"
-                        value={categoryFilter}
-                        onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }}
-                    >
-                        <option value="">All categories</option>
-                        {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
+                    <button type="button" className="ask-link" onClick={() => setChatOpen(true)}>
+                        Have a baking question? Ask the assistant
+                    </button>
                 </div>
 
-                {selectedRecipes.length > 0 && (
-                    <button className="shopping-btn" onClick={() => setShowShoppingList(true)}>
-                        Shopping list ({selectedRecipes.length})
-                    </button>
-                )}
+                <div className="recipe-box">
+                    <div className="box-tabs" role="group" aria-label="Filter by category">
+                        {TABS.map(c => (
+                            <button
+                                type="button"
+                                key={c.value || 'all'}
+                                className={`box-tab${categoryFilter === c.value ? ' active' : ''}`}
+                                aria-pressed={categoryFilter === c.value}
+                                onClick={() => chooseCategory(c.value)}
+                            >
+                                {c.label}
+                            </button>
+                        ))}
+                    </div>
 
-                <RecipeList
-                    recipes={pagedRecipes}
-                    onRecipeDeleted={fetchRecipes}
-                    selectedRecipes={selectedRecipes}
-                    onToggleSelect={toggleSelectRecipe}
-                />
+                    <div className="box-body">
+                        {selectedRecipes.length > 0 && (
+                            <div className="shopping-bar">
+                                <span>
+                                    {selectedRecipes.length} {selectedRecipes.length === 1 ? 'recipe' : 'recipes'} selected
+                                </span>
+                                <button type="button" className="rb-text-button" onClick={() => setSelectedRecipes([])}>
+                                    Clear
+                                </button>
+                                <button type="button" className="rb-button" onClick={() => setShowShoppingList(true)}>
+                                    Shopping list
+                                </button>
+                            </div>
+                        )}
 
-                {pageCount > 1 && (
-                    <nav className="pagination" aria-label="Recipe pages">
-                        <button
-                            className="btn-secondary"
-                            disabled={currentPage === 1}
-                            onClick={() => goToPage(currentPage - 1)}
-                        >
-                            Previous
-                        </button>
-                        <span className="pagination-status">Page {currentPage} of {pageCount}</span>
-                        <button
-                            className="btn-secondary"
-                            disabled={currentPage === pageCount}
-                            onClick={() => goToPage(currentPage + 1)}
-                        >
-                            Next
-                        </button>
-                    </nav>
-                )}
+                        {pagedRecipes.length === 0 ? (
+                            <p className="empty-state">{emptyText}</p>
+                        ) : (
+                            <RecipeList
+                                recipes={pagedRecipes}
+                                onRecipeDeleted={fetchRecipes}
+                                selectedRecipes={selectedRecipes}
+                                onToggleSelect={toggleSelectRecipe}
+                            />
+                        )}
+
+                        {pageCount > 1 && (
+                            <nav className="pagination" aria-label="Recipe pages">
+                                <button
+                                    type="button"
+                                    className="rb-ghost"
+                                    disabled={currentPage === 1}
+                                    onClick={() => goToPage(currentPage - 1)}
+                                >
+                                    Previous
+                                </button>
+                                <span className="pagination-status">Page {currentPage} of {pageCount}</span>
+                                <button
+                                    type="button"
+                                    className="rb-ghost"
+                                    disabled={currentPage === pageCount}
+                                    onClick={() => goToPage(currentPage + 1)}
+                                >
+                                    Next
+                                </button>
+                            </nav>
+                        )}
+                    </div>
+                </div>
 
                 {showShoppingList && (
                     <div className="modal-backdrop" onClick={() => setShowShoppingList(false)}>
@@ -150,7 +176,7 @@ function Recipes() {
                                     ))}
                                 </div>
                             ))}
-                            <button className="btn-secondary btn-block" onClick={() => setShowShoppingList(false)}>
+                            <button type="button" className="rb-ghost rb-block" onClick={() => setShowShoppingList(false)}>
                                 Close
                             </button>
                         </div>

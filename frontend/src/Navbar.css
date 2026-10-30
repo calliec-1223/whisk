@@ -7,15 +7,14 @@
   align-items: center;
   gap: var(--space-2) var(--space-6);
   padding: var(--space-3) var(--gutter);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--rb-paper);
+  border-bottom: 1px solid var(--rb-rule);
 }
 
 .navbar-brand {
-  font-family: var(--font-display);
-  font-size: 1.625rem;
-  font-weight: 500;
-  color: var(--text);
+  font-family: var(--rb-serif);
+  font-size: 1.5rem;
+  color: var(--rb-ink);
 }
 
 .navbar-links {
@@ -30,26 +29,40 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--tap);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: var(--rb-crumb);
+  font-family: var(--rb-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
   text-decoration: none;
 }
 
 .navbar-links a:hover {
-  color: var(--text);
+  color: var(--rb-ink);
 }
 
 .navbar-links a.active {
-  color: var(--text);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  color: var(--rb-ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--rb-jam);
 }
 
-.navbar-logout {
+.navbar .navbar-logout {
   min-height: 2.25rem;
-  padding: 0.25rem 0.875rem;
+  padding: 0.25rem 1rem;
+  border-color: #d6bbb5;
+  border-radius: 999px;
+  color: var(--rb-ink);
+  font-family: var(--rb-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.navbar .navbar-logout:hover {
+  background: var(--rb-tab);
+  border-color: #d6bbb5;
+  color: var(--rb-ink);
 }
 
 @media (max-width: 40rem) {
