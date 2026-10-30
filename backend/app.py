@@ -41,7 +41,9 @@ jwt = JWTManager(app)
 # set RATELIMIT_STORAGE_URI (e.g. a Redis URL) to share them.
 limiter = Limiter(get_remote_address, app=app,
                   default_limits=["2000 per day", "300 per hour"],
-                  storage_uri=os.getenv('RATELIMIT_STORAGE_URI', 'memory://'))
+                  storage_uri=os.getenv('RATELIMIT_STORAGE_URI', 'memory://'),
+                  # Local load tests only: RATELIMIT_ENABLED=0 turns limits off.
+                  enabled=os.getenv('RATELIMIT_ENABLED', '1') != '0')
 
 class Recipe (db.Model):
     id = db.Column(db.Integer, primary_key = True)
