@@ -21,6 +21,33 @@ function Chatbot() {
 
         const reply = (content) => setMessages([...updatedMessages, { role: 'assistant', content }])
 
+        const unavailable = 'The baking assistant is unavailable right now. Please try again later.'
+
+        // The server queues the question and replies right away with a job id;
+        // we then check for the answer about once a second.
+        const waitForAnswer = (jobId, startedAt) => {
+            if (Date.now() - startedAt > 90000) {
+                reply('This is taking longer than usual. Please try again.')
+                setLoading(false)
+                return
+            }
+            authFetch(`/chat/${jobId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'done') {
+                        reply(data.response)
+                        setLoading(false)
+                    } else if (data.status === 'pending') {
+                        setTimeout(() => waitForAnswer(jobId, startedAt), 1000)
+                    } else {
+                        reply(data.error || unavailable)
+                        setLoading(false)
+                    }
+                })
+                // A dropped check isn't fatal: try again on the next tick.
+                .catch(() => setTimeout(() => waitForAnswer(jobId, startedAt), 1000))
+        }
+
         authFetch('/chat', {
             method: 'POST',
             body: JSON.stringify({ message: text })
@@ -33,14 +60,20 @@ function Chatbot() {
             return res.json()
         })
         .then(data => {
-            if (data.response) {
-                reply(data.response)
+            if (data.job_id) {
+                waitForAnswer(data.job_id, Date.now())  // keeps the "typing" indicator on
+            } else if (data.response) {
+                reply(data.response)  // server running in sync mode
+                setLoading(false)
             } else {
                 reply(data.error || 'Something went wrong. Please try again.')
+                setLoading(false)
             }
         })
-        .catch(() => reply("Can't reach the server. Please try again."))
-        .finally(() => setLoading(false))
+        .catch(() => {
+            reply("Can't reach the server. Please try again.")
+            setLoading(false)
+        })
     }
 
     return (

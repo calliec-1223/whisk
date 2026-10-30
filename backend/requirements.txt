@@ -37,3 +37,4 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 Werkzeug==3.1.8
 wrapt==2.5.1
+taskqueue @ git+https://github.com/calliec-1223/task-queue.git   # job queue for /chat (Phase 4); brings redis + psycopg

@@ -9,7 +9,8 @@ from conversions import convert
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
-import anthropic
+import chat_queue
+from assistant import ask_claude
 import math
 import os
 from datetime import timedelta
@@ -178,6 +179,21 @@ def convert_ingredient():
     result = convert(ingredient.strip().lower(), amount, from_unit)
     return jsonify(result), (400 if 'error' in result else 200)
 
+# "queue" (default): /chat enqueues the question and returns at once; a worker
+# (worker.py) asks Claude and the browser polls GET /chat/<job_id>.
+# "sync": the original behavior, kept for before/after benchmarks and as a fallback.
+CHAT_MODE = os.getenv('CHAT_MODE', 'queue')
+
+
+def recipe_context_for(user_id):
+    # Use the saved recipes from the database, not whatever the client sends
+    recipes = Recipe.query.filter_by(user_id=user_id).limit(10).all()
+    return "\n".join([
+        f"- {r.title} ({r.servings} servings): {r.ingredients[:300]}"
+        for r in recipes
+    ])
+
+
 @app.route('/chat', methods=['POST'])
 @limiter.limit("20 per hour")
 @jwt_required()
@@ -187,29 +203,48 @@ def chat():
     if not user_message or len(user_message) > 1000:
         return jsonify({'error': 'Message must be 1 to 1000 characters'}), 400
 
-    # Use the saved recipes from the database, not whatever the client sends
     user_id = get_jwt_identity()
-    recipes = Recipe.query.filter_by(user_id=user_id).limit(10).all()
-    recipe_context = "\n".join([
-        f"- {r.title} ({r.servings} servings): {r.ingredients[:300]}"
-        for r in recipes
-    ])
+    recipe_context = recipe_context_for(user_id)
+
+    if CHAT_MODE == 'sync':
+        try:
+            return jsonify({'response': ask_claude(user_message, recipe_context)})
+        except Exception:
+            app.logger.exception('Claude API call failed')
+            return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
 
     try:
-        client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-        response = client.messages.create(
-            model="claude-haiku-5-5",
-            max_tokens=600,
-            system=f"""You are a helpful baking assistant.
-            The user has these recipes saved: {recipe_context}
-            Help them with baking questions, troubleshooting, and suggestions.""",
-            messages=[{"role": "user", "content": user_message}]
-        )
-        return jsonify({'response': response.content[0].text})
+        job_id = chat_queue.submit(user_id, user_message, recipe_context)
     except Exception:
-        app.logger.exception('Claude API call failed')
+        app.logger.exception('Could not enqueue chat job')
         return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
-    
+    # 202 Accepted: the question is queued; poll GET /chat/<job_id> for the answer.
+    return jsonify({'job_id': job_id}), 202
+
+
+@app.route('/chat/<job_id>', methods=['GET'])
+@limiter.limit("1200 per hour")  # the browser checks about once a second while waiting
+@jwt_required()
+def chat_result(job_id):
+    try:
+        job = chat_queue.lookup(job_id)
+    except Exception:
+        app.logger.exception('Could not read chat job')
+        return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503
+
+    if job is None:  # not in history yet: just enqueued
+        return jsonify({'status': 'pending'})
+    # Only the user who asked may read the answer. 404, not 403, so job ids
+    # belonging to other users don't even confirm they exist.
+    if job['payload'].get('user_id') != str(get_jwt_identity()):
+        return jsonify({'error': 'Not found'}), 404
+    if job['status'] == 'done':
+        return jsonify({'status': 'done', 'response': job['result']})
+    if job['status'] == 'dead':  # failed every retry
+        return jsonify({'status': 'error',
+                        'error': 'The baking assistant is unavailable right now. Please try again later.'})
+    return jsonify({'status': 'pending'})  # waiting, running, or retrying
+
 
 @app.route ('/signup', methods = ['POST'])
 @limiter.limit("10 per hour")
