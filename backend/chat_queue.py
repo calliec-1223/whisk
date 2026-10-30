@@ -20,6 +20,7 @@ from taskqueue.results import get_job
 QUEUE_NAME = "whisk"
 TASK = "whisk_chat"
 MAX_ATTEMPTS = 3  # first try plus 2 retries with backoff (e.g. if Claude is overloaded)
+TIMEOUT_SECONDS = 60  # one attempt may run this long before the queue abandons it
 
 _queue = None
 
@@ -43,7 +44,8 @@ def submit(user_id: str, message: str, recipe_context: str, request_id: str | No
     payload = {"task": TASK, "args": {"message": message, "recipe_context": recipe_context},
                "user_id": str(user_id)}  # stored so only this user can read the answer
     key = f"chat:{user_id}:{request_id}" if request_id else None
-    return queue().enqueue(payload, max_attempts=MAX_ATTEMPTS, idempotency_key=key)
+    return queue().enqueue(payload, max_attempts=MAX_ATTEMPTS, idempotency_key=key,
+                           timeout_seconds=TIMEOUT_SECONDS)
 
 
 def lookup(job_id: str) -> dict | None:

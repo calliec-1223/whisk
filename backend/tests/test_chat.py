@@ -132,3 +132,14 @@ def test_bad_request_id_rejected(client, auth_headers, fake_queue):
     assert res.status_code == 400
     res = client.post("/chat", json={"message": "hi", "request_id": 5}, headers=auth_headers)
     assert res.status_code == 400
+
+
+def test_worker_does_not_retry_claude_errors_that_cannot_succeed():
+    """400/401/403/404/422 go straight to failed; overload and rate limits retry."""
+    import anthropic
+    import worker
+
+    assert issubclass(anthropic.BadRequestError, worker.NO_RETRY)
+    assert issubclass(anthropic.AuthenticationError, worker.NO_RETRY)
+    assert not issubclass(anthropic.RateLimitError, worker.NO_RETRY)
+    assert not issubclass(anthropic.InternalServerError, worker.NO_RETRY)

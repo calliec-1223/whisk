@@ -30,7 +30,8 @@ def system_prompt(recipe_context: str) -> str:
             Keep answers concise: a few short paragraphs or a short list."""
 
 
-def ask_claude(message: str, recipe_context: str, max_retries: int = 2) -> str:
+def ask_claude(message: str, recipe_context: str, max_retries: int = 2,
+               timeout: float = 600) -> str:
     """Return Claude's answer.
 
     max_retries is the Anthropic SDK's own retry count. The queue worker passes
@@ -39,7 +40,8 @@ def ask_claude(message: str, recipe_context: str, max_retries: int = 2) -> str:
     """
     if os.getenv("WHISK_FAKE_CLAUDE") == "1":
         return _fake_answer(message)
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"), max_retries=max_retries)
+    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"),
+                                 max_retries=max_retries, timeout=timeout)
     response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
