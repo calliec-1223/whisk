@@ -46,19 +46,24 @@
   --shadow-float: 0 12px 32px rgba(60, 42, 31, 0.18);
   --page-width: 44rem;
 
-  /* Recipe box redesign (recipes page, nav, chat button). Other pages still use the tokens above. */
-  --rb-box: #f8ece9;      /* page: strawberry-milk pink */
-  --rb-tin: #efd8d3;      /* inside the recipe box, active tab */
-  --rb-tab: #f3e2de;      /* inactive divider tabs */
-  --rb-paper: #fffdfb;    /* index cards */
-  --rb-ink: #3a2321;
-  --rb-crumb: #735550;    /* muted text, readable on tin */
-  --rb-jam: #b23a48;
-  --rb-jam-dark: #962e3b;
-  --rb-rule: #e6d1cc;
-  --rb-line: #d9e1ea;     /* blue index-card lines */
-  --rb-serif: "Young Serif", Georgia, serif;
-  --rb-sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Cookbook redesign (recipes page, nav, chat button). Other pages still use the tokens above. */
+  --rb-box: #fff6f1;       /* tablecloth base */
+  --rb-check: rgba(226, 112, 104, 0.12); /* gingham stripes */
+  --rb-tin: #fff0d6;       /* cookbook body, active tab */
+  --rb-tab: #fff9f0;
+  --rb-paper: #fffdf7;     /* recipe cards */
+  --rb-ink: #4f3328;       /* cocoa: text and outlines */
+  --rb-crumb: #7a5a4c;
+  --rb-jam: #c8463d;       /* tomato: links, focus, delete */
+  --rb-jam-dark: #a8362e;
+  --rb-butter: #ffd36e;    /* main buttons */
+  --rb-butter-dark: #f7c24a;
+  --rb-rule: #4f3328;
+  --rb-line: #ead6c2;      /* dashed lines */
+  --rb-outline: 2px solid var(--rb-ink);
+  --rb-sticker: 0 3px 0 var(--rb-ink);
+  --rb-display: "M PLUS Rounded 1c", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --rb-body: "M PLUS Rounded 1c", system-ui, -apple-system, sans-serif;
 }
 
 *,

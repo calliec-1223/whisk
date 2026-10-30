@@ -96,6 +96,7 @@ function Recipes() {
                             <button
                                 type="button"
                                 key={c.value || 'all'}
+                                data-cat={c.value || 'all'}
                                 className={`box-tab${categoryFilter === c.value ? ' active' : ''}`}
                                 aria-pressed={categoryFilter === c.value}
                                 onClick={() => chooseCategory(c.value)}

@@ -8,12 +8,13 @@
   gap: var(--space-2) var(--space-6);
   padding: var(--space-3) var(--gutter);
   background: var(--rb-paper);
-  border-bottom: 1px solid var(--rb-rule);
+  border-bottom: var(--rb-outline);
 }
 
 .navbar-brand {
-  font-family: var(--rb-serif);
+  font-family: var(--rb-display);
   font-size: 1.5rem;
+  font-weight: 800;
   color: var(--rb-ink);
 }
 
@@ -30,9 +31,9 @@
   align-items: center;
   min-height: var(--tap);
   color: var(--rb-crumb);
-  font-family: var(--rb-sans);
+  font-family: var(--rb-body);
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: 700;
   text-decoration: none;
 }
 
@@ -42,26 +43,26 @@
 
 .navbar-links a.active {
   color: var(--rb-ink);
-  font-weight: 600;
-  box-shadow: inset 0 -2px 0 var(--rb-jam);
+  box-shadow: inset 0 -3px 0 var(--rb-butter);
 }
 
 .navbar .navbar-logout {
   min-height: 2.25rem;
   padding: 0.25rem 1rem;
-  border-color: #d6bbb5;
+  border: var(--rb-outline);
   border-radius: 999px;
+  background: var(--rb-paper);
   color: var(--rb-ink);
-  font-family: var(--rb-sans);
+  font-family: var(--rb-body);
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: normal;
   text-transform: none;
 }
 
 .navbar .navbar-logout:hover {
-  background: var(--rb-tab);
-  border-color: #d6bbb5;
+  background: var(--rb-tin);
+  border-color: var(--rb-ink);
   color: var(--rb-ink);
 }
 

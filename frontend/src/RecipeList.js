@@ -55,7 +55,9 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                         </h3>
                     </div>
                     <p className="card-meta">
-                        {categoryLabel(recipe.category) && <span>{categoryLabel(recipe.category)}</span>}
+                        {categoryLabel(recipe.category) && (
+                            <span className="chip" data-cat={recipe.category}>{categoryLabel(recipe.category)}</span>
+                        )}
                         <span>Serves {recipe.servings}</span>
                     </p>
 
