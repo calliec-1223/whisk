@@ -10,6 +10,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 import chat_queue
+from taskqueue import QueueFull
 from assistant import ask_claude
 import math
 import os
@@ -227,6 +228,10 @@ def chat():
 
     try:
         job_id = chat_queue.submit(user_id, user_message, recipe_context, request_id)
+    except QueueFull:
+        # Too many questions waiting: say so now instead of queueing one that
+        # might not be answered for a long time.
+        return jsonify({'error': 'The baking assistant is busy right now. Please try again in a minute.'}), 503
     except Exception:
         app.logger.exception('Could not enqueue chat job')
         return jsonify({'error': 'The baking assistant is unavailable right now. Please try again later.'}), 503

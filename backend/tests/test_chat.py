@@ -143,3 +143,15 @@ def test_worker_does_not_retry_claude_errors_that_cannot_succeed():
     assert issubclass(anthropic.AuthenticationError, worker.NO_RETRY)
     assert not issubclass(anthropic.RateLimitError, worker.NO_RETRY)
     assert not issubclass(anthropic.InternalServerError, worker.NO_RETRY)
+
+
+def test_full_queue_returns_busy_message(client, auth_headers, monkeypatch):
+    from taskqueue import QueueFull
+
+    def full(*args):
+        raise QueueFull("100,000 jobs waiting")
+    monkeypatch.setattr(chat_queue, "submit", full)
+    monkeypatch.setattr(app_module, "CHAT_MODE", "queue")
+    res = ask(client, auth_headers)
+    assert res.status_code == 503
+    assert "busy" in res.get_json()["error"]
