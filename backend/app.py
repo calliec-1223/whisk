@@ -59,13 +59,18 @@ class Recipe (db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(80), unique = True, nullable = False)
-    email = db.Column(db.String(120), unique = True, nullable = False)
+    email = db.Column(db.String(120), unique = True, nullable = True)  # optional; NULL when not given
     password = db.Column(db.String(200), nullable = False)
 
 with app.app_context():
     db.create_all()
     # create_all doesn't add indexes to tables that already exist
     db.session.execute(text('CREATE INDEX IF NOT EXISTS ix_recipe_user_id ON recipe (user_id)'))
+    # Email became optional. create_all doesn't change existing tables, so drop
+    # the old NOT NULL rule on Postgres (safe to run every startup). SQLite can't
+    # alter columns: an old local whisk.db needs to be recreated.
+    if db.engine.dialect.name == 'postgresql':
+        db.session.execute(text('ALTER TABLE "user" ALTER COLUMN email DROP NOT NULL'))
     db.session.commit()
 
 RECIPE_REQUIRED_FIELDS = ('title', 'ingredients', 'steps', 'servings')
@@ -258,20 +263,29 @@ def chat_result(job_id):
 def signup():
     data = request.get_json(silent=True) or {}
 
-    if not data.get('username') or not data.get('email') or not data.get('password'):
-        return jsonify({'error': 'All fields are required'}), 400
-    
+    if not data.get('username') or not data.get('password'):
+        return jsonify({'error': 'Username and password are required'}), 400
+
+    # Email is optional. A blank one is stored as NULL, not "", so several
+    # users without an email don't collide on the unique rule.
+    email = data.get('email')
+    if email is not None and not isinstance(email, str):
+        return jsonify({'error': 'Email must be text'}), 400
+    email = (email or '').strip() or None
+    if email is not None and ('@' not in email or len(email) > 120):
+        return jsonify({'error': 'Please enter a valid email or leave it blank'}), 400
+
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username already exists'}), 400
-    
-    if User.query.filter_by(email=data['email']).first():
+
+    if email is not None and User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email already registered'}), 400
 
     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8') 
 
     user = User(
         username = data['username'],
-        email = data['email'],
+        email = email,
         password = hashed_password
     )     
     db.session.add(user)

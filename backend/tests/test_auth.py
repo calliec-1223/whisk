@@ -14,13 +14,37 @@ def test_signup_creates_user_with_hashed_password(client):
         assert app_module.bcrypt.check_password_hash(user.password, "secret123")
 
 
-@pytest.mark.parametrize("missing", ["username", "email", "password"])
+@pytest.mark.parametrize("missing", ["username", "password"])
 def test_signup_missing_field_returns_400(client, missing):
     body = {"username": "alice", "email": "a@example.com", "password": "pw"}
     del body[missing]
     resp = client.post("/signup", json=body)
     assert resp.status_code == 400
-    assert resp.get_json()["error"] == "All fields are required"
+    assert resp.get_json()["error"] == "Username and password are required"
+
+
+@pytest.mark.parametrize("email", [None, "", "   "])
+def test_signup_without_email_works(client, email):
+    body = {"username": "alice", "password": "pw123456"}
+    if email is not None:
+        body["email"] = email
+    assert client.post("/signup", json=body).status_code == 201
+    with app_module.app.app_context():
+        assert app_module.User.query.filter_by(username="alice").one().email is None
+    assert login(client, "alice").status_code == 200
+
+
+def test_many_users_can_skip_email(client):
+    """Blank emails are stored as NULL, which the unique rule allows more than once."""
+    for name in ("alice", "bob", "carol"):
+        assert client.post("/signup", json={"username": name, "password": "pw123456",
+                                            "email": ""}).status_code == 201
+
+
+@pytest.mark.parametrize("email", ["not-an-email", "a" * 115 + "@x.com", 42])
+def test_signup_bad_email_returns_400(client, email):
+    resp = client.post("/signup", json={"username": "alice", "password": "pw123456", "email": email})
+    assert resp.status_code == 400
 
 
 def test_signup_duplicate_username_returns_400(client):

@@ -14,8 +14,8 @@ function Signup() {
     const navigate = useNavigate()
 
     const handleSignup = () => {
-        if (form.username === '' || form.email === '' || form.password === ''){
-            setError('Please fill in all fields.')
+        if (form.username === '' || form.password === ''){
+            setError('Please enter a username and password.')
             return
         }
 
@@ -53,7 +53,7 @@ function Signup() {
                     value={form.username}
                     onChange={handleChange}
                 />
-                <label htmlFor="signup-email">Email</label>
+                <label htmlFor="signup-email">Email (optional)</label>
                 <input
                     id="signup-email"
                     name="email"
