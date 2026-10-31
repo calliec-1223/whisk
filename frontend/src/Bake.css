@@ -1,0 +1,175 @@
+/* Cooking mode */
+
+.bake-page {
+  --page-width: 42rem;
+}
+
+.bake-card {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+}
+
+.bake-card h2 {
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+}
+
+.bake-hint {
+  margin: 0.25rem 0 1.25rem;
+  color: var(--rb-crumb);
+  font-weight: 700;
+}
+
+/* Prep checklist */
+
+.prep-list {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.prep-list label {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0.75rem 0.25rem;
+  border-bottom: 2px dashed var(--rb-line);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.prep-list input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.prep-list label.ready span {
+  color: var(--rb-crumb);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.bake-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.bake-count {
+  color: var(--rb-crumb);
+  font-weight: 800;
+}
+
+/* Steps */
+
+.step-progress {
+  list-style: none;
+  display: flex;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+
+.step-progress li {
+  flex: 1;
+  height: 0.75rem;
+  background: var(--rb-paper);
+  border: 2px solid var(--rb-ink);
+  border-radius: 999px;
+}
+
+.step-progress li.done {
+  background: var(--rb-butter);
+}
+
+.step-progress li.current {
+  background: var(--rb-pink);
+}
+
+.step-big {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin: 1rem 0 1.25rem;
+  font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.step-big .step-badge {
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: 0.125rem;
+  font-size: 1rem;
+}
+
+.step-timer-btn,
+.step-timer {
+  margin: 0 0.5rem 0.5rem 0;
+}
+
+.step-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #e6eedb;
+  border: var(--rb-outline);
+  border-radius: 999px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-timer.done {
+  background: var(--rb-jam);
+  color: #fff;
+}
+
+/* Finish */
+
+.finish-card {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.medal-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+button.medal-choice {
+  display: grid;
+  justify-items: center;
+  gap: 0.375rem;
+  min-height: 0;
+  padding: 1rem 0.5rem 0.875rem;
+  border-radius: 16px;
+  background: var(--rb-paper);
+  white-space: normal;
+}
+
+button.medal-choice:hover {
+  background: var(--rb-tin);
+}
+
+.medal-pop {
+  margin-bottom: 0.75rem;
+  animation: sticker-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.finish-card .rb-button {
+  margin-top: 0.5rem;
+}
+
+@keyframes sticker-pop {
+  from { opacity: 0; transform: scale(0.6) rotate(-4deg); }
+}

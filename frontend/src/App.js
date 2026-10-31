@@ -6,6 +6,10 @@ import AddRecipe from './AddRecipe'
 import Converter from './Converter'
 import Layout from './Layout'
 import EditRecipePage from './EditRecipePage'
+import Bake from './Bake'
+import StickerBook from './StickerBook'
+import { CelebrateProvider } from './Celebrate'
+import { TimerProvider } from './Timers'
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -15,6 +19,8 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <TimerProvider>
+      <CelebrateProvider>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -22,7 +28,11 @@ function App() {
         <Route path="/add" element={<ProtectedRoute><Layout><AddRecipe /></Layout></ProtectedRoute>} />
         <Route path="/convert" element={<ProtectedRoute><Layout><Converter /></Layout></ProtectedRoute>} />
         <Route path="/edit/:id" element={<ProtectedRoute><Layout><EditRecipePage /></Layout></ProtectedRoute>} />
+        <Route path="/bake/:id" element={<ProtectedRoute><Layout><Bake /></Layout></ProtectedRoute>} />
+        <Route path="/stickers" element={<ProtectedRoute><Layout><StickerBook /></Layout></ProtectedRoute>} />
       </Routes>
+      </CelebrateProvider>
+      </TimerProvider>
     </BrowserRouter>
   )
 }

@@ -114,3 +114,10 @@ def test_claim_browser_sticker(client, auth_headers):
 def test_cannot_claim_earned_only_stickers(client, auth_headers, key):
     res = client.post("/stickers/claim", json={"key": key}, headers=auth_headers)
     assert res.status_code == 400
+
+
+def test_earned_dates_are_marked_utc(client, auth_headers):
+    create(client, auth_headers)
+    stickers = client.get("/stickers", headers=auth_headers).get_json()
+    first = next(s for s in stickers if s["key"] == "first-recipe")
+    assert first["earned_at"].endswith("+00:00")

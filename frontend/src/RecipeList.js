@@ -1,8 +1,8 @@
 import {useState} from 'react'
 import './Recipes.css'
-import {useNavigate} from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CATEGORIES } from './categories'
-import { CategoryIcon, ChevronIcon } from './icons'
+import { CategoryIcon, ChevronIcon, Medal, MEDAL_NAMES } from './icons'
 
 const categoryLabel = (value) => CATEGORIES.find(c => c.value === value)?.label
 
@@ -56,6 +56,13 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
                             </span>
                         )}
                         <span>Serves {recipe.servings}</span>
+                        {recipe.bake_count > 0 && (
+                            <span className="baked">
+                                <Medal medal={recipe.best_medal} size={20} />
+                                <span className="visually-hidden">Best result: {MEDAL_NAMES[recipe.best_medal]}.</span>
+                                Baked {recipe.bake_count} {recipe.bake_count === 1 ? 'time' : 'times'}
+                            </span>
+                        )}
                     </p>
 
                     {expanded[recipe.id] && (
@@ -102,6 +109,9 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
                                 </div>
                             ) : (
                             <div className="recipe-actions">
+                                <Link to={`/bake/${recipe.id}`} state={{ recipe }} className="rb-button">
+                                    Start baking
+                                </Link>
                                 <input
                                     className="scale-input"
                                     type="number"

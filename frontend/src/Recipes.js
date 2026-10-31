@@ -4,9 +4,12 @@ import { authFetch } from './api'
 import RecipeList from './RecipeList'
 import { CATEGORIES } from './categories'
 import { useChat } from './ChatContext'
-import { BowlIcon, CategoryIcon } from './icons'
+import { BowlIcon, CategoryIcon, WheelIcon } from './icons'
 import PageHeader from './PageHeader'
 import Toast from './Toast'
+import SpinnerModal from './Spinner'
+import { useCelebrate } from './Celebrate'
+import { play } from './sound'
 
 const PAGE_SIZE = 10
 const UNDO_MS = 6000
@@ -28,6 +31,8 @@ function Recipes() {
     const pendingRef = useRef(null)
     const [notice, setNotice] = useState('')
     const clearNotice = useCallback(() => setNotice(''), [])
+    const [showSpinner, setShowSpinner] = useState(false)
+    const celebrate = useCelebrate()
 
     const filteredRecipes = recipes.filter(r => {
     const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase())
@@ -125,7 +130,19 @@ function Recipes() {
         r.ingredients.split('\n').map((_, i) => `${r.id}-${i}`))
     const allBought = shoppingKeys.length > 0 && shoppingKeys.every(k => boughtItems[k])
 
-    const toggleBought = (key) => setBoughtItems({ ...boughtItems, [key]: !boughtItems[key] })
+    const toggleBought = (key) => {
+        if (!boughtItems[key]) play('pop')
+        setBoughtItems({ ...boughtItems, [key]: !boughtItems[key] })
+    }
+
+    // Finishing a whole shopping list earns a sticker (the server ignores repeats)
+    useEffect(() => {
+        if (!allBought) return
+        authFetch('/stickers/claim', { method: 'POST', body: JSON.stringify({ key: 'shopping-list' }) })
+            .then(res => res.json())
+            .then(data => celebrate(data.new_stickers))
+            .catch(() => {})
+    }, [allBought, celebrate])
 
     const closeShoppingList = () => {
         setShowShoppingList(false)
@@ -140,7 +157,16 @@ function Recipes() {
                 <PageHeader
                     title="My recipe book"
                     meta={`${recipes.length} ${recipeWord(recipes.length)} collected`}
-                    action={<Link to="/add" className="rb-button">New recipe</Link>}
+                    action={
+                        <div className="header-actions">
+                            {recipes.length > 0 && (
+                                <button type="button" className="rb-ghost" onClick={() => setShowSpinner(true)}>
+                                    <WheelIcon size={18} /> What should I bake?
+                                </button>
+                            )}
+                            <Link to="/add" className="rb-button">New recipe</Link>
+                        </div>
+                    }
                 />
 
                 <div className="box-tools">
@@ -226,6 +252,8 @@ function Recipes() {
                         )}
                     </div>
                 </div>
+
+                {showSpinner && <SpinnerModal recipes={recipes} onClose={() => setShowSpinner(false)} />}
 
                 {pendingDelete && (
                     <div className="toast undo-toast" role="status">

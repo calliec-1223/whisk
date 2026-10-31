@@ -69,15 +69,33 @@
   color: var(--rb-ink);
 }
 
+.navbar .navbar-sound {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  margin-right: calc(-1 * var(--space-4)); /* sit closer to Log out */
+  background: var(--rb-paper);
+  box-shadow: 0 2px 0 var(--rb-ink);
+}
+
+.navbar .navbar-sound[aria-pressed="true"] {
+  background: var(--rb-butter);
+}
+
 @media (max-width: 40rem) {
   .navbar {
     padding-block: var(--space-2) 0;
   }
 
   /* Brand and log out on the first row, page links on the second */
-  .navbar-logout {
+  .navbar .navbar-sound {
     order: 1;
     margin-left: auto;
+    margin-right: 0;
+  }
+
+  .navbar-logout {
+    order: 1;
   }
 
   .navbar-links {

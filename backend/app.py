@@ -178,6 +178,11 @@ def award_stickers(user_id, extra_keys=()):
     return new
 
 
+def as_utc(dt):
+    """Databases hand back naive datetimes; ours are always stored in UTC."""
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
 def bake_stats(user_id):
     """{recipe_id: {'bake_count': n, 'best_medal': 'gold' | ...}} for the user's recipes."""
     stats = {}
@@ -278,7 +283,7 @@ def get_stickers():
     earned = {s.key: s.earned_at for s in Sticker.query.filter_by(user_id=user_id).all()}
     return jsonify([
         {'key': key, 'name': name, 'how': how,
-         'earned_at': earned[key].isoformat() if key in earned else None}
+         'earned_at': as_utc(earned[key]).isoformat() if key in earned else None}
         for key, name, how in STICKERS
     ])
 

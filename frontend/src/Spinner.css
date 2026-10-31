@@ -1,0 +1,58 @@
+/* "What should I bake?" wheel */
+
+.spinner-modal {
+  text-align: center;
+}
+
+.spinner-modal h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.wheel-wrap {
+  position: relative;
+  width: min(100%, 17rem);
+  margin: 0 auto;
+  padding-top: 0.75rem;
+}
+
+.wheel {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.15, 0.85, 0.25, 1);
+}
+
+/* Little triangle at the top that points at the winner */
+.wheel-pointer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: 2rem;
+  height: auto;
+  transform: translateX(-50%);
+}
+
+/* The shopping list's h2 leaves room for its stamp; this one doesn't need it */
+.recipes-page .spinner-modal h2 {
+  padding-right: 0;
+}
+
+.spinner-result {
+  min-height: 3.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.picked-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.spinner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}

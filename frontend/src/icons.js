@@ -103,3 +103,76 @@ export function CategoryIcon({ cat, ...props }) {
     const art = CATEGORY_ICONS[cat]
     return art ? <LineIcon {...props}>{art}</LineIcon> : null
 }
+
+export function BookIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <path d="M12 6.5c-2-1.5-5-2-8-1.5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z" />
+            <path d="M12 6.5V19.5" />
+        </LineIcon>
+    )
+}
+
+export function StarIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" />
+        </LineIcon>
+    )
+}
+
+export function BasketIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <path d="M3.5 10.5h17l-1.8 9h-13.4z" />
+            <path d="M8 10.5l3-6M16 10.5l-3-6" />
+            <path d="M9.5 13.5v3M14.5 13.5v3" />
+        </LineIcon>
+    )
+}
+
+export function WheelIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6L6 18" />
+        </LineIcon>
+    )
+}
+
+export function TimerIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <circle cx="12" cy="13.5" r="7.5" />
+            <path d="M12 13.5V9.5M10 2.5h4M12 2.5V6" />
+        </LineIcon>
+    )
+}
+
+export function SoundIcon({ on, ...props }) {
+    return (
+        <LineIcon {...props}>
+            <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+            {on
+                ? <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+                : <path d="M16 9.5l5 5M21 9.5l-5 5" />}
+        </LineIcon>
+    )
+}
+
+const MEDAL_COLORS = { gold: '#f6c445', silver: '#d9dee4', bronze: '#e0a878' }
+export const MEDAL_NAMES = { bronze: 'Bronze', silver: 'Silver', gold: 'Gold' }
+
+// A medal on a ribbon, in the same cocoa outline style
+export function Medal({ medal, size = 20, className }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+            <g stroke="#4f3328" strokeWidth="1.6" strokeLinejoin="round">
+                <path d="M6.5 1.5h4.5l2 6.5H8.5z" fill="#f4b6be" />
+                <path d="M17.5 1.5H13l-2 6.5h4.5z" fill="#ffd3d8" />
+                <circle cx="12" cy="15" r="7" fill={MEDAL_COLORS[medal] || MEDAL_COLORS.bronze} />
+                <circle cx="12" cy="15" r="4" fill="none" opacity="0.45" />
+            </g>
+        </svg>
+    )
+}

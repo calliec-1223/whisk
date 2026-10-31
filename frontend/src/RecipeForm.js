@@ -4,6 +4,7 @@ import { CATEGORIES } from './categories'
 import './AddRecipe.css'
 import Toast from './Toast'
 import PageHeader from './PageHeader'
+import { useCelebrate } from './Celebrate'
 
 const MAX_SERVINGS = 1000
 
@@ -25,6 +26,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
     const [saving, setSaving] = useState(false)
     const timerRef = useRef(null)
     const navigate = useNavigate()
+    const celebrate = useCelebrate()
 
     useEffect(() => {
         return () => {
@@ -77,6 +79,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
         .then(({ ok, data }) => {
             if (ok) {
                 setShowToast(true)
+                celebrate(data.new_stickers)
                 timerRef.current = setTimeout(() => navigate('/recipes'), 1500)
             } else {
                 setError(data.error || 'Something went wrong. Please try again.')

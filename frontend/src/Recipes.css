@@ -511,3 +511,19 @@
   min-height: 2.5rem;
   padding: 0.375rem 1.125rem;
 }
+
+/* ---------- Game bits: header buttons, medals on cards ---------- */
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.baked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--rb-ink);
+  font-weight: 700;
+}
