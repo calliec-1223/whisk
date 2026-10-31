@@ -146,7 +146,11 @@ function Bake() {
     return (
         <div className="page-enter bake-page">
             <div className="recipes-container">
-                <PageHeader title="Let's bake!" meta={recipe.title} />
+                <PageHeader
+                    title="Let's bake!"
+                    meta={recipe.title}
+                    action={!result && <Link to="/recipes" className="rb-button rb-ghost">Cancel</Link>}
+                />
 
                 {phase === 'prep' && (
                     <section className="bake-card" aria-labelledby="prep-title">
