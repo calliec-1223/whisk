@@ -14,6 +14,9 @@ def create(client, headers, **overrides):
     return client.post("/recipes", json={**RECIPE, **overrides}, headers=headers)
 
 
+NO_BAKES = {"bake_count": 0, "best_medal": None}
+
+
 def only_recipe(client, headers):
     recipes = client.get("/recipes", headers=headers).get_json()
     assert len(recipes) == 1
@@ -50,7 +53,7 @@ def test_create_then_list(client, auth_headers):
     assert create(client, auth_headers).status_code == 201
     recipe = only_recipe(client, auth_headers)
     assert isinstance(recipe.pop("id"), int)
-    assert recipe == RECIPE
+    assert recipe == {**RECIPE, **NO_BAKES}
 
 
 def test_notes_and_category_default_to_empty(client, auth_headers):
@@ -76,7 +79,7 @@ def test_update_changes_all_fields(client, auth_headers):
     }
     resp = client.put(f"/recipes/{recipe_id}", json=updated, headers=auth_headers)
     assert resp.status_code == 200
-    assert only_recipe(client, auth_headers) == {"id": recipe_id, **updated}
+    assert only_recipe(client, auth_headers) == {"id": recipe_id, **updated, **NO_BAKES}
 
 
 def test_update_missing_recipe_returns_404(client, auth_headers):
@@ -160,7 +163,7 @@ def test_get_single_recipe(client, auth_headers):
     recipe_id = only_recipe(client, auth_headers)["id"]
     resp = client.get(f"/recipes/{recipe_id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.get_json() == {"id": recipe_id, **RECIPE}
+    assert resp.get_json() == {"id": recipe_id, **RECIPE, **NO_BAKES}
 
 
 def test_get_single_recipe_of_other_user_returns_404(client, auth_headers, other_headers):

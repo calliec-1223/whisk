@@ -14,7 +14,7 @@ from taskqueue import QueueFull
 from assistant import ask_claude
 import math
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -62,6 +62,26 @@ class User(db.Model):
     username = db.Column(db.String(80), unique = True, nullable = False)
     email = db.Column(db.String(120), unique = True, nullable = True)  # optional; NULL when not given
     password = db.Column(db.String(200), nullable = False)
+
+
+class Bake(db.Model):
+    """One finished bake of a recipe, with the medal the baker gave it."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    # Set to NULL if the recipe is deleted, so past bakes still count toward stickers
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=True, index=True)
+    category = db.Column(db.String(50), nullable=True)  # copied from the recipe at bake time
+    medal = db.Column(db.String(10), nullable=False)
+    baked_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
+class Sticker(db.Model):
+    """A sticker the user has earned. Once earned it stays, even if recipes are deleted."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    key = db.Column(db.String(40), nullable=False)
+    earned_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    __table_args__ = (db.UniqueConstraint('user_id', 'key'),)
 
 with app.app_context():
     db.create_all()
@@ -112,6 +132,63 @@ def validate_recipe(data):
         return None, f'Servings must be a whole number from 1 to {MAX_SERVINGS}'
     return fields, None
 
+MEDALS = ('bronze', 'silver', 'gold')  # worst to best
+
+# Sticker catalog, in the order the sticker book shows them.
+STICKERS = [
+    ('first-recipe', 'First recipe', 'Save your first recipe'),
+    ('recipe-5', 'Recipe collector', 'Save 5 recipes'),
+    ('recipe-10', 'Full cookbook', 'Save 10 recipes'),
+    ('first-bake', 'First bake', 'Finish a recipe in cooking mode'),
+    ('bake-10', 'Busy baker', 'Finish 10 bakes'),
+    ('first-gold', 'Gold medal', 'Give a bake a gold medal'),
+    ('gold-3', 'Triple gold', 'Earn 3 gold medals'),
+    ('variety', 'Variety baker', 'Bake from 4 different categories'),
+    ('shopping-list', 'Ready to shop', 'Tick off a whole shopping list'),
+    ('spinner', 'Let the wheel decide', 'Spin the "What should I bake?" wheel'),
+]
+STICKER_KEYS = {key for key, _, _ in STICKERS}
+# Stickers for things that only happen in the browser, so the app claims them itself
+CLAIMABLE_STICKERS = {'shopping-list', 'spinner'}
+
+
+def award_stickers(user_id, extra_keys=()):
+    """Give the user any stickers they now qualify for. Returns the newly earned keys."""
+    recipe_count = Recipe.query.filter_by(user_id=user_id).count()
+    bakes = Bake.query.filter_by(user_id=user_id).all()
+    golds = sum(1 for b in bakes if b.medal == 'gold')
+    categories = {b.category for b in bakes if b.category}
+
+    qualifies = {
+        'first-recipe': recipe_count >= 1,
+        'recipe-5': recipe_count >= 5,
+        'recipe-10': recipe_count >= 10,
+        'first-bake': len(bakes) >= 1,
+        'bake-10': len(bakes) >= 10,
+        'first-gold': golds >= 1,
+        'gold-3': golds >= 3,
+        'variety': len(categories) >= 4,
+    }
+    wanted = {k for k, ok in qualifies.items() if ok} | set(extra_keys)
+    have = {s.key for s in Sticker.query.filter_by(user_id=user_id).all()}
+    new = [key for key, _, _ in STICKERS if key in wanted and key not in have]
+    for key in new:
+        db.session.add(Sticker(user_id=user_id, key=key))
+    db.session.commit()
+    return new
+
+
+def bake_stats(user_id):
+    """{recipe_id: {'bake_count': n, 'best_medal': 'gold' | ...}} for the user's recipes."""
+    stats = {}
+    for b in Bake.query.filter_by(user_id=user_id).filter(Bake.recipe_id.isnot(None)).all():
+        s = stats.setdefault(b.recipe_id, {'bake_count': 0, 'best_medal': None})
+        s['bake_count'] += 1
+        if s['best_medal'] is None or MEDALS.index(b.medal) > MEDALS.index(s['best_medal']):
+            s['best_medal'] = b.medal
+    return stats
+
+
 def recipe_to_dict(r):
     return {
         'id': r.id,
@@ -123,6 +200,12 @@ def recipe_to_dict(r):
         'category': r.category,
     }
 
+
+def recipe_with_stats(r, stats):
+    d = recipe_to_dict(r)
+    d.update(stats.get(r.id, {'bake_count': 0, 'best_medal': None}))
+    return d
+
 @app.route('/ping')
 @limiter.exempt
 def ping():
@@ -133,7 +216,8 @@ def ping():
 def get_recipes():
     user_id = get_jwt_identity()
     recipes = Recipe.query.filter_by(user_id = user_id).all()
-    return jsonify([recipe_to_dict(r) for r in recipes])
+    stats = bake_stats(user_id)
+    return jsonify([recipe_with_stats(r, stats) for r in recipes])
 
 @app.route('/recipes/<int:id>', methods=['GET'])
 @jwt_required()
@@ -142,7 +226,7 @@ def get_recipe(id):
     recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
     if not recipe:
         return jsonify({'error': 'Recipe not found'}), 404
-    return jsonify(recipe_to_dict(recipe))
+    return jsonify(recipe_with_stats(recipe, bake_stats(user_id)))
 
 @app.route('/recipes', methods = ['POST'])
 @jwt_required()
@@ -155,7 +239,8 @@ def add_recipe():
     recipe = Recipe(user_id=user_id, **fields)
     db.session.add(recipe)
     db.session.commit()
-    return jsonify({'message': 'Recipe saved!'}), 201
+    new_stickers = award_stickers(user_id)
+    return jsonify({'message': 'Recipe saved!', 'new_stickers': new_stickers}), 201
 
 @app.route('/recipes/<int:id>', methods = ['DELETE'])
 @jwt_required()
@@ -164,9 +249,48 @@ def delete_recipe(id):
     recipe = Recipe.query.filter_by(id = id, user_id = user_id).first()
     if not recipe:
         return jsonify ({'error': 'Recipe not found'}), 404 
+    Bake.query.filter_by(recipe_id=recipe.id).update({'recipe_id': None})
     db.session.delete(recipe)
     db.session.commit()
     return jsonify({'message': 'Recipe deleted!'}), 202
+
+@app.route('/recipes/<int:id>/bakes', methods=['POST'])
+@jwt_required()
+def add_bake(id):
+    """Record a finished bake with the medal the baker picked."""
+    user_id = get_jwt_identity()
+    recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
+    if not recipe:
+        return jsonify({'error': 'Recipe not found'}), 404
+    medal = (request.get_json(silent=True) or {}).get('medal')
+    if medal not in MEDALS:
+        return jsonify({'error': 'Medal must be bronze, silver or gold'}), 400
+    db.session.add(Bake(user_id=user_id, recipe_id=recipe.id, category=recipe.category, medal=medal))
+    db.session.commit()
+    new_stickers = award_stickers(user_id)
+    stats = bake_stats(user_id).get(recipe.id)
+    return jsonify({**stats, 'new_stickers': new_stickers}), 201
+
+@app.route('/stickers', methods=['GET'])
+@jwt_required()
+def get_stickers():
+    user_id = get_jwt_identity()
+    earned = {s.key: s.earned_at for s in Sticker.query.filter_by(user_id=user_id).all()}
+    return jsonify([
+        {'key': key, 'name': name, 'how': how,
+         'earned_at': earned[key].isoformat() if key in earned else None}
+        for key, name, how in STICKERS
+    ])
+
+@app.route('/stickers/claim', methods=['POST'])
+@jwt_required()
+def claim_sticker():
+    """Claim a sticker for something that happens only in the browser."""
+    user_id = get_jwt_identity()
+    key = (request.get_json(silent=True) or {}).get('key')
+    if key not in CLAIMABLE_STICKERS:
+        return jsonify({'error': 'That sticker can\'t be claimed'}), 400
+    return jsonify({'new_stickers': award_stickers(user_id, extra_keys=[key])})
 
 @app.route('/convert', methods = ['POST'])
 def convert_ingredient():
