@@ -6,7 +6,7 @@ import { CategoryIcon, ChevronIcon, Medal, MEDAL_NAMES } from './icons'
 
 const categoryLabel = (value) => CATEGORIES.find(c => c.value === value)?.label
 
-function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
+function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect, leavingId, arrivingId }){
     
     const [desiredServings, setDesiredServings] = useState({})
     const navigate = useNavigate()
@@ -27,7 +27,11 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
     return (
         <div className="card-stack">
             {recipes.map(recipe => (
-                <article key={recipe.id} className={`index-card${expanded[recipe.id] ? ' open' : ''}`}>
+                // The slot lets a deleted card shrink away (and a restored one pop back)
+                <div key={recipe.id}
+                     className={`card-slot${recipe.id === leavingId ? ' leaving' : ''}${recipe.id === arrivingId ? ' arriving' : ''}`}>
+                <div className="card-slot-inner">
+                <article className={`index-card${expanded[recipe.id] ? ' open' : ''}`}>
                     <div className="card-head">
                         <input
                             type="checkbox"
@@ -65,8 +69,9 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
                         )}
                     </p>
 
-                    {expanded[recipe.id] && (
-                        <div className="recipe-details" id={`recipe-${recipe.id}`}>
+                    <div className="details-wrap" id={`recipe-${recipe.id}`} inert={!expanded[recipe.id]}>
+                        <div className="details-clip">
+                        <div className="recipe-details">
                             <div className="recipe-section">
                                 <h4>Ingredients</h4>
                                 <ul className="ingredient-display-list">
@@ -138,8 +143,11 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
                                 </p>
                             )}
                         </div>
-                    )}
+                        </div>
+                    </div>
                 </article>
+                </div>
+                </div>
             ))}
         </div>
     )

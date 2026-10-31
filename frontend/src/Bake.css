@@ -46,12 +46,6 @@
   height: 1.5rem;
 }
 
-.prep-list label.ready span {
-  color: var(--rb-crumb);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-}
-
 .bake-nav {
   display: flex;
   flex-wrap: wrap;
@@ -76,19 +70,52 @@
 }
 
 .step-progress li {
+  position: relative;
   flex: 1;
   height: 0.75rem;
+  overflow: hidden;
   background: var(--rb-paper);
   border: 2px solid var(--rb-ink);
   border-radius: 999px;
 }
 
-.step-progress li.done {
-  background: var(--rb-butter);
+/* Each segment fills from the left as you reach it */
+.step-progress li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--rb-pink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease, background-color 0.35s ease;
 }
 
-.step-progress li.current {
-  background: var(--rb-pink);
+.step-progress li.current::after {
+  transform: scaleX(1);
+}
+
+.step-progress li.done::after {
+  background: var(--rb-butter);
+  transform: scaleX(1);
+}
+
+/* Turning to the next step: the new page swings in from the side */
+.step-page {
+  transform-origin: left center;
+  animation: page-turn-forward 0.4s cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+
+.step-page.turn-back {
+  transform-origin: right center;
+  animation-name: page-turn-back;
+}
+
+@keyframes page-turn-forward {
+  from { opacity: 0; transform: perspective(900px) rotateY(-35deg) translateX(1.5rem); }
+}
+
+@keyframes page-turn-back {
+  from { opacity: 0; transform: perspective(900px) rotateY(35deg) translateX(-1.5rem); }
 }
 
 .step-big {

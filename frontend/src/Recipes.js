@@ -32,6 +32,9 @@ function Recipes() {
     const [notice, setNotice] = useState('')
     const clearNotice = useCallback(() => setNotice(''), [])
     const [showSpinner, setShowSpinner] = useState(false)
+    // For the delete/undo animations: the card shrinking away, and the one popping back
+    const [leavingId, setLeavingId] = useState(null)
+    const [arrivingId, setArrivingId] = useState(null)
     const celebrate = useCelebrate()
 
     const filteredRecipes = recipes.filter(r => {
@@ -93,8 +96,15 @@ function Recipes() {
         const timer = setTimeout(commitDelete, UNDO_MS)
         pendingRef.current = { recipe, timer }
         setPendingDelete({ recipe })
-        setRecipes(prev => prev.filter(r => r.id !== recipe.id))
         setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id))
+        // Let the card shrink away before it leaves the list
+        setLeavingId(recipe.id)
+        setTimeout(() => {
+            setLeavingId(null)
+            if (pendingRef.current?.recipe.id === recipe.id) {
+                setRecipes(prev => prev.filter(r => r.id !== recipe.id))
+            }
+        }, 300)
     }
 
     const undoDelete = () => {
@@ -104,6 +114,9 @@ function Recipes() {
         pendingRef.current = null
         setPendingDelete(null)
         setNotice('Recipe restored!')
+        setLeavingId(null)
+        setArrivingId(pending.recipe.id)
+        setTimeout(() => setArrivingId(null), 600)
         fetchRecipes()
     }
 
@@ -224,6 +237,8 @@ function Recipes() {
                             <RecipeList
                                 recipes={pagedRecipes}
                                 onDelete={deleteRecipe}
+                                leavingId={leavingId}
+                                arrivingId={arrivingId}
                                 selectedRecipes={selectedRecipes}
                                 onToggleSelect={toggleSelectRecipe}
                             />
@@ -277,7 +292,7 @@ function Recipes() {
                                 {allBought && <span className="stamp">All set!</span>}
                             </div>
                             {selectedRecipes.map(recipe => (
-                                <div key={recipe.id} className="shopping-group">
+                                <div key={recipe.id} className="shopping-group tick-list">
                                     <h3>{recipe.title}</h3>
                                     {recipe.ingredients.split('\n').map((ing, i) => (
                                         <label key={i} className="shopping-item">

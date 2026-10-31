@@ -361,6 +361,30 @@ button:disabled:hover {
   }
 }
 
+/* Ticking an item off: the check pops like a stamp and a line draws through the text */
+.tick-list input[type="checkbox"]:checked {
+  animation: check-pop 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.tick-list input[type="checkbox"] + span {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 55%;
+  background-size: 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 0.3s ease, color 0.2s ease;
+}
+
+.tick-list input[type="checkbox"]:checked + span {
+  background-size: 100% 2px;
+  color: var(--rb-crumb);
+}
+
+@keyframes check-pop {
+  40% { transform: scale(1.35) rotate(-8deg); }
+}
+
 /* Text for screen readers only */
 .visually-hidden {
   position: absolute;

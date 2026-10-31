@@ -44,6 +44,7 @@ function Bake() {
     const [phase, setPhase] = useState('prep') // prep -> steps -> finish
     const [ready, setReady] = useState({})
     const [stepIndex, setStepIndex] = useState(0)
+    const [turnDirection, setTurnDirection] = useState('forward') // which way the page turns
     const [stepTimers, setStepTimers] = useState({}) // "step-minutes" -> timer id
     const [result, setResult] = useState(null)
     const [error, setError] = useState('')
@@ -64,6 +65,7 @@ function Bake() {
     const lastStep = stepIndex === steps.length - 1
 
     const goToStep = (i) => {
+        setTurnDirection(i > stepIndex ? 'forward' : 'back')
         setStepIndex(i)
         play('step')
     }
@@ -126,10 +128,10 @@ function Bake() {
                     <section className="bake-card" aria-labelledby="prep-title">
                         <h2 id="prep-title">Gather your ingredients</h2>
                         <p className="bake-hint">Tick each one off as you set it out.</p>
-                        <ul className="prep-list">
+                        <ul className="prep-list tick-list">
                             {ingredients.map((ing, i) => (
                                 <li key={i}>
-                                    <label className={ready[i] ? 'ready' : ''}>
+                                    <label>
                                         <input type="checkbox" checked={!!ready[i]} onChange={() => toggleReady(i)} />
                                         <span>{ing}</span>
                                     </label>
@@ -159,6 +161,8 @@ function Bake() {
                                 <li key={i} className={i < stepIndex ? 'done' : i === stepIndex ? 'current' : ''} />
                             ))}
                         </ol>
+                        {/* Keyed by step so each step turns in like a new page */}
+                        <div key={stepIndex} className={`step-page turn-${turnDirection}`}>
                         <p className="bake-count" id="step-title">Step {stepIndex + 1} of {steps.length}</p>
                         <p className="step-big" aria-live="polite">
                             <span className="step-badge">{stepIndex + 1}</span>
@@ -182,6 +186,8 @@ function Bake() {
                                 </button>
                             )
                         })}
+
+                        </div>
 
                         <div className="bake-nav">
                             <button type="button" className="rb-ghost" disabled={stepIndex === 0} onClick={prevStep}>

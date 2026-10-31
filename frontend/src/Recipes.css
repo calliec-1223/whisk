@@ -153,7 +153,55 @@
 
 .card-stack {
   display: grid;
-  gap: 0.75rem;
+}
+
+/* Each card sits in a slot that can shrink to nothing (delete) or pop in (undo) */
+.card-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-bottom: 0.5rem;
+  transition: grid-template-rows 0.3s ease, margin-bottom 0.3s ease, opacity 0.25s ease;
+}
+
+.card-slot-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 4px; /* room for the card's shadow */
+}
+
+.card-slot.leaving {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
+}
+
+.card-slot.leaving .index-card {
+  transform: translateX(1.5rem) rotate(1.5deg);
+  transition: transform 0.3s ease;
+}
+
+.card-slot.arriving .index-card {
+  animation: card-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes card-arrive {
+  from { opacity: 0; transform: scale(0.9); }
+}
+
+/* Opened card details slide open instead of appearing all at once */
+.details-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.details-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.index-card.open .details-wrap {
+  grid-template-rows: 1fr;
 }
 
 .index-card {
@@ -424,11 +472,6 @@
   letter-spacing: normal;
   text-transform: none;
   cursor: pointer;
-}
-
-.shopping-item input:checked + span {
-  color: var(--rb-crumb);
-  text-decoration: line-through;
 }
 
 /* ---------- Phones ---------- */
