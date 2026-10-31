@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authFetch } from './api'
 import RecipeList from './RecipeList'
@@ -6,8 +6,10 @@ import { CATEGORIES } from './categories'
 import { useChat } from './ChatContext'
 import { BowlIcon, CategoryIcon } from './icons'
 import PageHeader from './PageHeader'
+import Toast from './Toast'
 
 const PAGE_SIZE = 10
+const UNDO_MS = 6000
 const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
 
 function Recipes() {
@@ -20,6 +22,12 @@ function Recipes() {
     const [page, setPage] = useState(1)
     // Ticked shopping-list items, keyed "recipeId-lineIndex"
     const [boughtItems, setBoughtItems] = useState({})
+    // A deleted recipe waits here for UNDO_MS before the server delete is sent,
+    // so Undo only has to bring it back on screen.
+    const [pendingDelete, setPendingDelete] = useState(null)
+    const pendingRef = useRef(null)
+    const [notice, setNotice] = useState('')
+    const clearNotice = useCallback(() => setNotice(''), [])
 
     const filteredRecipes = recipes.filter(r => {
     const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase())
@@ -49,16 +57,60 @@ function Recipes() {
         authFetch('/recipes')
         .then(res => res.json())
         .then(data => {
-    if (Array.isArray(data)) {
-        setRecipes(data)
-    } else {
-        setRecipes([])
+            const hiddenId = pendingRef.current?.recipe.id
+            setRecipes(Array.isArray(data) ? data.filter(r => r.id !== hiddenId) : [])
+        })
     }
-})
+
+    // Send the waiting delete to the server now.
+    // keepalive lets the request finish even if the tab is closing.
+    const commitDelete = () => {
+        const pending = pendingRef.current
+        if (!pending) return
+        clearTimeout(pending.timer)
+        pendingRef.current = null
+        setPendingDelete(null)
+        authFetch(`/recipes/${pending.recipe.id}`, { method: 'DELETE', keepalive: true })
+            .then(res => {
+                if (!res.ok && res.status !== 404) {
+                    setNotice("Couldn't delete that recipe. Please try again.")
+                    fetchRecipes()
+                }
+            })
+            .catch(() => {
+                setNotice("Couldn't reach the server, so the recipe wasn't deleted.")
+                fetchRecipes()
+            })
+    }
+
+    const deleteRecipe = (recipe) => {
+        commitDelete() // only one undo at a time: finish any earlier delete first
+        const timer = setTimeout(commitDelete, UNDO_MS)
+        pendingRef.current = { recipe, timer }
+        setPendingDelete({ recipe })
+        setRecipes(prev => prev.filter(r => r.id !== recipe.id))
+        setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id))
+    }
+
+    const undoDelete = () => {
+        const pending = pendingRef.current
+        if (!pending) return
+        clearTimeout(pending.timer)
+        pendingRef.current = null
+        setPendingDelete(null)
+        setNotice('Recipe restored!')
+        fetchRecipes()
     }
 
     useEffect(() => {
         fetchRecipes()
+        // Leaving the page or closing the tab sends any waiting delete right away
+        window.addEventListener('pagehide', commitDelete)
+        return () => {
+            window.removeEventListener('pagehide', commitDelete)
+            commitDelete()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     const chooseCategory = (value) => {
         setCategoryFilter(value)
@@ -145,7 +197,7 @@ function Recipes() {
                         ) : (
                             <RecipeList
                                 recipes={pagedRecipes}
-                                onRecipeDeleted={fetchRecipes}
+                                onDelete={deleteRecipe}
                                 selectedRecipes={selectedRecipes}
                                 onToggleSelect={toggleSelectRecipe}
                             />
@@ -174,6 +226,14 @@ function Recipes() {
                         )}
                     </div>
                 </div>
+
+                {pendingDelete && (
+                    <div className="toast undo-toast" role="status">
+                        <span>“{pendingDelete.recipe.title}” deleted.</span>
+                        <button type="button" className="undo-btn" onClick={undoDelete}>Undo</button>
+                    </div>
+                )}
+                {notice && !pendingDelete && <Toast message={notice} onClose={clearNotice} />}
 
                 {showShoppingList && (
                     <div className="modal-backdrop" onClick={closeShoppingList}>

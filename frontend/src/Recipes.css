@@ -459,3 +459,55 @@
   transform: none;
   box-shadow: none;
 }
+
+/* ---------- Delete: are-you-sure step and undo toast ---------- */
+
+.delete-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  background: #ffe9e6;
+  border: 2px dashed var(--rb-jam);
+  border-radius: 14px;
+}
+
+.delete-confirm p {
+  font-weight: 700;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rb-danger-solid {
+  background: var(--rb-jam);
+  color: #fff;
+}
+
+.rb-danger-solid:hover {
+  background: var(--rb-jam-dark);
+  color: #fff;
+}
+
+.undo-toast {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.375rem 0.375rem 0.375rem 1.25rem;
+}
+
+.undo-toast span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-toast .undo-btn {
+  flex-shrink: 0;
+  min-height: 2.5rem;
+  padding: 0.375rem 1.125rem;
+}

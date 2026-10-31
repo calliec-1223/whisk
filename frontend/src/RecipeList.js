@@ -1,5 +1,4 @@
 import {useState} from 'react'
-import { authFetch } from './api'
 import './Recipes.css'
 import {useNavigate} from 'react-router-dom'
 import { CATEGORIES } from './categories'
@@ -7,7 +6,7 @@ import { CategoryIcon, ChevronIcon } from './icons'
 
 const categoryLabel = (value) => CATEGORIES.find(c => c.value === value)?.label
 
-function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect}){
+function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect}){
     
     const [desiredServings, setDesiredServings] = useState({})
     const navigate = useNavigate()
@@ -16,13 +15,8 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
         setDesiredServings({...desiredServings, [id]: value})
     }
     
-    const handleDelete = (id) => {
-        authFetch(`/recipes/${id}`, { method: 'DELETE' })
-        .then(res => res.json())
-        .then (() => {
-            onRecipeDeleted()
-        })
-    }
+    // Which recipe is showing its "are you sure?" step
+    const [confirmingId, setConfirmingId] = useState(null)
 
     const [expanded, setExpanded] = useState({})
 
@@ -85,6 +79,28 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                             {recipe.notes && (
                                 <p className="recipe-notes">{recipe.notes}</p>
                             )}
+                            {confirmingId === recipe.id ? (
+                                <div className="delete-confirm" role="group" aria-label="Confirm delete">
+                                    <p>Delete this recipe? You can undo right after.</p>
+                                    <div className="delete-confirm-actions">
+                                        <button
+                                            type="button"
+                                            className="rb-ghost"
+                                            autoFocus
+                                            onClick={() => setConfirmingId(null)}
+                                        >
+                                            Keep it
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="rb-danger-solid"
+                                            onClick={() => { setConfirmingId(null); onDelete(recipe) }}
+                                        >
+                                            Yes, delete
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
                             <div className="recipe-actions">
                                 <input
                                     className="scale-input"
@@ -103,8 +119,9 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                                 >
                                     Edit
                                 </button>
-                                <button type="button" className="rb-ghost rb-danger" onClick={() => handleDelete(recipe.id)}>Delete</button>
+                                <button type="button" className="rb-ghost rb-danger" onClick={() => setConfirmingId(recipe.id)}>Delete</button>
                             </div>
+                            )}
                             {desiredServings[recipe.id] && (
                                 <p className="scale-result">
                                     Multiply each ingredient by {+(desiredServings[recipe.id] / recipe.servings).toFixed(2)} to serve {desiredServings[recipe.id]}!
