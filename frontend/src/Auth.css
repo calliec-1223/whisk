@@ -1,74 +1,144 @@
-/* Login and signup: the front cover of the cookbook */
+/* Login and signup: an open cookbook */
 
 .auth-container {
   display: grid;
   place-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: var(--gutter);
+  padding: 2.5rem var(--gutter);
 }
 
-.cookbook-cover {
+.open-book {
   position: relative;
-  width: min(100%, 26rem);
-  padding: clamp(1.5rem, 5vw, 2rem) clamp(1.25rem, 5vw, 2rem) clamp(1.5rem, 5vw, 2rem) 3.25rem;
-  background: var(--rb-pink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(100%, 52rem);
   border: var(--rb-outline);
-  border-radius: 10px 22px 22px 10px;
+  border-radius: 22px;
   box-shadow: 0 5px 0 var(--rb-ink);
 }
 
-/* Spine with stitching */
-.cookbook-cover::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 1.75rem;
-  background: var(--rb-pink-dark);
+/* ---------- Left: the decorated cover ---------- */
+
+.book-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 24rem;
+  padding: 3rem 2rem;
+  background: var(--rb-pink);
   border-right: var(--rb-outline);
-  border-radius: 8px 0 0 8px;
+  border-radius: 20px 0 0 20px;
 }
 
-.cookbook-cover::after {
+/* Stitching down the spine */
+.book-cover::after {
   content: "";
   position: absolute;
-  top: 0.875rem;
-  bottom: 0.875rem;
-  left: 0.75rem;
-  border-left: 2px dashed rgba(79, 51, 40, 0.5);
+  top: 1rem;
+  bottom: 1rem;
+  right: 0.75rem;
+  border-right: 2px dashed rgba(79, 51, 40, 0.45);
 }
 
-/* Title label stuck on the cover */
+/* Title label with a scalloped, doily-style edge.
+   The ::before is a ring of little circles peeking out around the plate. */
+.cover-plate-wrap {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 17rem);
+}
+
 .cover-plate {
+  position: relative;
   display: grid;
   justify-items: center;
-  margin-bottom: 1.25rem;
-  padding: 1rem;
+  padding: 1.25rem 1rem 1.125rem;
   background: var(--rb-paper);
   border: var(--rb-outline);
-  border-radius: 14px;
-  box-shadow: 0 2px 0 var(--rb-ink);
+  border-radius: 16px;
   text-align: center;
 }
 
-.cover-plate h1 {
-  font-size: 2rem;
+.cover-plate-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  z-index: -1;
+  background-image: radial-gradient(circle, var(--rb-paper) 5px, var(--rb-ink) 5.5px, var(--rb-ink) 7px, transparent 7.5px);
+  background-size: 16px 16px;
+  background-repeat: round;
+}
+
+/* Stitched border just inside the plate */
+.cover-plate::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1.5px dashed rgba(79, 51, 40, 0.4);
+  border-radius: 11px;
+  pointer-events: none;
+}
+
+.cover-title {
+  font-family: var(--rb-display);
+  font-size: 2.5rem;
+  font-weight: 800;
   line-height: 1.1;
 }
 
-.cover-plate p {
+.cover-subtitle {
   color: var(--rb-crumb);
   font-weight: 700;
 }
 
-.cover-subtitle {
-  margin-bottom: 1.25rem;
+/* Food stickers stuck on, overlapping the plate's edges */
+.cover-sticker {
+  position: absolute;
+  z-index: 1;
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.cover-sticker-cookie { top: -1.75rem; left: -2rem; transform: rotate(-14deg); }
+.cover-sticker-strawberry { top: -2.75rem; right: 1.5rem; transform: rotate(10deg); }
+.cover-sticker-muffin { bottom: -2.75rem; left: 2rem; transform: rotate(8deg); }
+.cover-sticker-star { bottom: -1.5rem; right: -1.75rem; transform: rotate(-10deg); }
+
+/* ---------- Right: the lined page with the form ---------- */
+
+.book-page {
+  position: relative;
+  padding: 2.5rem clamp(1.5rem, 4vw, 2.5rem) 2rem;
+  background-color: var(--rb-paper);
+  background-image:
+    linear-gradient(90deg, transparent 1rem, rgba(200, 70, 61, 0.3) 1rem, rgba(200, 70, 61, 0.3) calc(1rem + 1.5px), transparent calc(1rem + 1.5px)),
+    repeating-linear-gradient(transparent 0, transparent calc(2rem - 1px), var(--rb-rule-blue) calc(2rem - 1px), var(--rb-rule-blue) 2rem);
+  border-radius: 0 20px 20px 0;
+  /* a little shading where the page curves into the spine */
+  box-shadow: inset 10px 0 0 -4px rgba(79, 51, 40, 0.06);
+}
+
+.bookmark {
+  position: absolute;
+  top: -0.875rem;
+  right: 2rem;
+  width: 1.5rem;
+  height: auto;
+}
+
+.book-page h1 {
+  font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem);
+  padding-right: 2.5rem; /* clear of the bookmark */
+}
+
+.page-intro {
+  margin: 0.25rem 0 1.25rem;
+  color: var(--rb-crumb);
   font-weight: 700;
 }
 
-.cookbook-cover button {
+.book-page button {
   width: 100%;
   margin-top: var(--space-1);
 }
@@ -76,4 +146,37 @@
 .auth-switch {
   margin-top: 1.25rem;
   font-weight: 700;
+}
+
+/* ---------- Phones: cover on top, page below ---------- */
+
+@media (max-width: 44rem) {
+  .open-book {
+    grid-template-columns: 1fr;
+  }
+
+  .book-cover {
+    min-height: 16rem;
+    padding: 3.5rem 2rem;
+    border-right: 0;
+    border-bottom: var(--rb-outline);
+    border-radius: 20px 20px 0 0;
+  }
+
+  .book-cover::after {
+    top: auto;
+    left: 1rem;
+    right: 1rem;
+    bottom: 0.75rem;
+    border-right: 0;
+    border-bottom: 2px dashed rgba(79, 51, 40, 0.45);
+  }
+
+  .cover-sticker-cookie { left: -1rem; }
+  .cover-sticker-star { right: -1rem; }
+
+  .book-page {
+    border-radius: 0 0 20px 20px;
+    box-shadow: none;
+  }
 }

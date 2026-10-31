@@ -1,8 +1,7 @@
 import {useState} from 'react'
 import { apiFetch } from './api'
 import { Link, useNavigate } from 'react-router-dom'
-import './Auth.css'
-import { WhiskIcon } from './icons'
+import AuthBook from './AuthBook'
 
 
 function Signup() {
@@ -39,46 +38,38 @@ function Signup() {
     const [error, setError] = useState('')
 
     return (
-        <div className="auth-container">
-            <div className="cookbook-cover">
-                <div className="cover-plate">
-                    <WhiskIcon size={34} />
-                    <h1>Whisk</h1>
-                    <p>My recipe book</p>
-                </div>
-                <p className="cover-subtitle">Start your own recipe book. It only takes a minute!</p>
-                <label htmlFor="signup-username">Username</label>
-                <input
-                    id="signup-username"
-                    name="username"
-                    autoComplete="username"
-                    value={form.username}
-                    onChange={handleChange}
-                />
-                <label htmlFor="signup-email">Email (optional)</label>
-                <input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={handleChange}
-                />
-                <label htmlFor="signup-password">Password</label>
-                <input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    value={form.password}
-                    onChange={handleChange}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
-                />
-                {error && <p className="form-error">{error}</p>}
-                <button type="button" onClick={handleSignup}>Create account</button>
-                <p className="auth-switch">Already have an account? <Link to="/">Log in</Link></p>
-            </div>
-        </div>
+        <AuthBook title="Start your recipe book" subtitle="It only takes a minute!">
+            <label htmlFor="signup-username">Username</label>
+            <input
+                id="signup-username"
+                name="username"
+                autoComplete="username"
+                value={form.username}
+                onChange={handleChange}
+            />
+            <label htmlFor="signup-email">Email (optional)</label>
+            <input
+                id="signup-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
+            />
+            <label htmlFor="signup-password">Password</label>
+            <input
+                id="signup-password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={handleChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
+            />
+            {error && <p className="form-error">{error}</p>}
+            <button type="button" onClick={handleSignup}>Create account</button>
+            <p className="auth-switch">Already have an account? <Link to="/">Log in</Link></p>
+        </AuthBook>
     )
 }
 

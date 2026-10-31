@@ -176,3 +176,13 @@ export function Medal({ medal, size = 20, className }) {
         </svg>
     )
 }
+
+export function StrawberryIcon(props) {
+    return (
+        <LineIcon {...props}>
+            <path d="M12 8c4 0 7 1.5 7 4.5 0 4-3.5 8-7 8.5-3.5-.5-7-4.5-7-8.5C5 9.5 8 8 12 8z" />
+            <path d="M8.5 8.5L12 5l3.5 3.5M12 5V2.5" />
+            <path d="M9.5 12.5h.01M14.5 12.5h.01M12 15.5h.01M9.5 17h.01M14.5 17h.01" strokeWidth="2.4" />
+        </LineIcon>
+    )
+}

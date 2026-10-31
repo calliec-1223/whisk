@@ -2,7 +2,7 @@
    Every component stylesheet builds on these. */
 :root {
   --rb-box: #fff6f1;       /* tablecloth base */
-  --rb-check: rgba(226, 112, 104, 0.12); /* gingham stripes */
+  --rb-check: rgba(226, 112, 104, 0.06); /* gingham stripes */
   --rb-tin: #fff0d6;       /* cookbook body, active tab */
   --rb-tab: #fff9f0;
   --rb-paper: #fffdf7;     /* cards */

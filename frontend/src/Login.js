@@ -1,8 +1,7 @@
 import {useState} from 'react'
 import { apiFetch } from './api'
 import { Link, useNavigate } from 'react-router-dom'
-import './Auth.css'
-import { WhiskIcon } from './icons'
+import AuthBook from './AuthBook'
 
 function Login({ onLogin }) {
     const [form, setForm] = useState({
@@ -33,37 +32,29 @@ function Login({ onLogin }) {
         setForm({...form, [e.target.name]: e.target.value })
     }
     return (
-        <div className="auth-container">
-            <div className="cookbook-cover">
-                <div className="cover-plate">
-                    <WhiskIcon size={34} />
-                    <h1>Whisk</h1>
-                    <p>My recipe book</p>
-                </div>
-                <p className="cover-subtitle">Welcome back! Log in to open your recipe book.</p>
-                <label htmlFor="login-username">Username</label>
-                <input
-                    id="login-username"
-                    name="username"
-                    autoComplete="username"
-                    value={form.username}
-                    onChange={handleChange}
-                />
-                <label htmlFor="login-password">Password</label>
-                <input
-                    id="login-password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={form.password}
-                    onChange={handleChange}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                />
-                {error && <p className="form-error">{error}</p>}
-                <button type="button" onClick={handleLogin}>Log in</button>
-                <p className="auth-switch">No account yet? <Link to="/signup">Sign up</Link></p>
-            </div>
-        </div>
+        <AuthBook title="Welcome back!" subtitle="Log in to open your recipe book.">
+            <label htmlFor="login-username">Username</label>
+            <input
+                id="login-username"
+                name="username"
+                autoComplete="username"
+                value={form.username}
+                onChange={handleChange}
+            />
+            <label htmlFor="login-password">Password</label>
+            <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                value={form.password}
+                onChange={handleChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+            />
+            {error && <p className="form-error">{error}</p>}
+            <button type="button" onClick={handleLogin}>Log in</button>
+            <p className="auth-switch">No account yet? <Link to="/signup">Sign up</Link></p>
+        </AuthBook>
     )
 }
 
