@@ -5,6 +5,7 @@ import RecipeList from './RecipeList'
 import { CATEGORIES } from './categories'
 import { useChat } from './ChatContext'
 import { BowlIcon, CategoryIcon } from './icons'
+import PageHeader from './PageHeader'
 
 const PAGE_SIZE = 10
 const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
@@ -84,13 +85,11 @@ function Recipes() {
     return (
         <div className="page-enter recipes-page">
             <div className="recipes-container">
-                <header className="box-header">
-                    <div>
-                        <h1 className="ribbon"><span className="ribbon-face">My recipe book</span></h1>
-                        <p className="box-count">{recipes.length} {recipeWord(recipes.length)} collected</p>
-                    </div>
-                    <Link to="/add" className="rb-button">New recipe</Link>
-                </header>
+                <PageHeader
+                    title="My recipe book"
+                    meta={`${recipes.length} ${recipeWord(recipes.length)} collected`}
+                    action={<Link to="/add" className="rb-button">New recipe</Link>}
+                />
 
                 <div className="box-tools">
                     <input

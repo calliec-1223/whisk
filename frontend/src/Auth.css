@@ -1,54 +1,79 @@
+/* Login and signup: the front cover of the cookbook */
+
 .auth-container {
-  position: relative;
-  overflow: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
   display: grid;
   place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
   padding: var(--gutter);
-  background: var(--choc);
 }
 
-.auth-ring {
-  position: absolute;
-  right: -4rem;
-  bottom: -4rem;
-  width: clamp(14rem, 34vw, 24rem);
-  color: var(--accent);
-  opacity: 0.25;
-  pointer-events: none;
-}
-
-.auth-card {
+.cookbook-cover {
   position: relative;
-  width: min(100%, 25rem);
-  box-shadow: var(--shadow-float);
+  width: min(100%, 26rem);
+  padding: clamp(1.5rem, 5vw, 2rem) clamp(1.25rem, 5vw, 2rem) clamp(1.5rem, 5vw, 2rem) 3.25rem;
+  background: var(--rb-pink);
+  border: var(--rb-outline);
+  border-radius: 10px 22px 22px 10px;
+  box-shadow: 0 5px 0 var(--rb-ink);
 }
 
-.auth-card h1 {
-  font-weight: 300;
-  line-height: 1;
+/* Spine with stitching */
+.cookbook-cover::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1.75rem;
+  background: var(--rb-pink-dark);
+  border-right: var(--rb-outline);
+  border-radius: 8px 0 0 8px;
 }
 
-.auth-underline {
-  display: block;
-  width: 7.5rem;
-  height: auto;
-  margin: var(--space-2) 0 var(--space-3);
-  color: var(--accent);
+.cookbook-cover::after {
+  content: "";
+  position: absolute;
+  top: 0.875rem;
+  bottom: 0.875rem;
+  left: 0.75rem;
+  border-left: 2px dashed rgba(79, 51, 40, 0.5);
 }
 
-.auth-card .page-subtitle {
-  margin-bottom: var(--space-5);
+/* Title label stuck on the cover */
+.cover-plate {
+  display: grid;
+  justify-items: center;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 14px;
+  box-shadow: 0 2px 0 var(--rb-ink);
+  text-align: center;
 }
 
-.auth-card button {
+.cover-plate h1 {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.cover-plate p {
+  color: var(--rb-crumb);
+  font-weight: 700;
+}
+
+.cover-subtitle {
+  margin-bottom: 1.25rem;
+  font-weight: 700;
+}
+
+.cookbook-cover button {
   width: 100%;
   margin-top: var(--space-1);
 }
 
 .auth-switch {
-  margin-top: var(--space-5);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+  margin-top: 1.25rem;
+  font-weight: 700;
 }

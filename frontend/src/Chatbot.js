@@ -81,6 +81,7 @@ function Chatbot() {
     return (
         <>
             <button
+                type="button"
                 className="chat-fab"
                 onClick={() => setIsOpen(!isOpen)}
                 aria-expanded={isOpen}
@@ -91,13 +92,12 @@ function Chatbot() {
             {isOpen && (
                 <div className="chat-widget" role="dialog" aria-label="Assistant">
                     <div className="chat-widget-header">
-                        <p className="eyebrow"><span className="label-dot" aria-hidden="true" /> Assistant</p>
-                        <h3>Baking questions</h3>
-                        <p>Can see the recipes you've saved.</p>
+                        <h3>Ask the assistant</h3>
+                        <p>It can see the recipes you've saved.</p>
                     </div>
                     <div className="chat-messages">
                         {messages.length === 0 && (
-                            <p className="chat-empty">Ask about a recipe, a substitution, or a bake that didn't turn out.</p>
+                            <p className="chat-empty">Hi! Ask me about a recipe, a swap, or a bake that didn't turn out.</p>
                         )}
                         {messages.map((msg, index) => (
                             <div key={index} className={`chat-message ${msg.role}`}>
@@ -129,7 +129,7 @@ function Chatbot() {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleSend()}
                         />
-                        <button onClick={handleSend}>Send</button>
+                        <button type="button" onClick={handleSend}>Send</button>
                     </div>
                 </div>
             )}

@@ -1,5 +1,103 @@
+/* Converter styled as a kitchen scale */
+
 .converter-page {
-  --page-width: 34rem;
+  --page-width: 30rem;
+}
+
+.scale {
+  position: relative;
+  padding-top: 1.75rem;
+}
+
+/* Weighing plate and the stem that holds it */
+.scale-plate {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: 72%;
+  height: 1.25rem;
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 999px;
+  box-shadow: 0 2px 0 var(--rb-ink);
+  transform: translateX(-50%);
+}
+
+.scale::before {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  width: 2.75rem;
+  height: 0.875rem;
+  background: var(--rb-pink-dark);
+  border-inline: var(--rb-outline);
+  transform: translateX(-50%);
+}
+
+.scale-body {
+  position: relative;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  background: var(--rb-pink);
+  border: var(--rb-outline);
+  border-radius: 28px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+  margin-bottom: 0.75rem; /* room for the feet */
+}
+
+/* Two little feet */
+.scale-body::before,
+.scale-body::after {
+  content: "";
+  position: absolute;
+  bottom: -0.9rem;
+  width: 3rem;
+  height: 0.625rem;
+  background: var(--rb-ink);
+  border-radius: 0 0 8px 8px;
+}
+
+.scale-body::before { left: 14%; }
+.scale-body::after { right: 14%; }
+
+/* Readout window */
+.scale-display {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.125rem;
+  min-height: 7.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #e6eedb;
+  border: var(--rb-outline);
+  border-radius: 14px;
+  box-shadow: inset 0 3px 0 rgba(79, 51, 40, 0.12);
+  text-align: center;
+}
+
+.display-number {
+  font-size: clamp(2.25rem, 1.8rem + 2vw, 2.875rem);
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.display-unit {
+  margin-left: 0.375rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.display-label {
+  color: var(--rb-crumb);
+  font-weight: 700;
+}
+
+.display-error {
+  color: var(--rb-jam-dark);
+  font-weight: 700;
 }
 
 .ingredient-wrapper {
@@ -13,60 +111,46 @@
 
 .suggestions-list {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 10;
   list-style: none;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-float);
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 12px;
+  box-shadow: var(--rb-sticker);
   overflow: hidden;
 }
 
-.suggestions-list li {
-  padding: 0.625rem 0.75rem;
-  cursor: pointer;
+.suggestions-list button {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 500;
 }
 
-.suggestions-list li:hover {
-  background: var(--surface-sunken);
+.suggestions-list button:hover,
+.suggestions-list button:focus-visible {
+  background: var(--rb-tin);
+}
+
+.suggestions-list button:active {
+  transform: none;
+}
+
+.scale-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 var(--space-3);
 }
 
 .convert-btn {
   width: 100%;
   margin-top: var(--space-1);
-}
-
-.converter-result {
-  margin-top: var(--space-5);
-  padding: var(--space-5) var(--space-4);
-  background: var(--surface-sunken);
-  border-radius: var(--radius);
-  text-align: center;
-}
-
-.result-amount {
-  font-size: 1.125rem;
-}
-
-.result-number {
-  font-family: var(--font-display);
-  font-size: clamp(2.25rem, 1.8rem + 2vw, 3rem);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  margin-right: var(--space-1);
-}
-
-.result-label {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  margin-top: var(--space-1);
-}
-
-.converter-error {
-  margin-top: var(--space-4);
-  color: var(--danger);
-  font-size: var(--text-sm);
 }

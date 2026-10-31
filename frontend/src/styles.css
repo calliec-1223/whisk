@@ -1,34 +1,27 @@
-/* Design tokens. Every component stylesheet uses these. */
-/* Design tokens. Every component stylesheet uses these. */
+/* Design tokens and shared styles: a cozy cookbook on a gingham tablecloth.
+   Every component stylesheet builds on these. */
 :root {
-  /* Bakery palette: chocolate, blush cream, caramel */
-  --bg: #f6eee8;
-  --surface: #fdf9f6;
-  --surface-sunken: #f1e6de;
-  --text: #33241b;
-  --text-muted: #7b6559;
-  --border: #eadcd2;
-  --border-strong: #d8c4b6;
-  --accent: #c69a6d;
-  --accent-hover: #b78a5c;
-  --accent-soft: #f0e2d5;
-  --on-accent: #2f2018; /* text on filled buttons */
-  --link: #8a5a33;      /* caramel dark enough to read on cream */
-  --danger: #94394c;
-  --choc: #3c2a1f;
-  --on-choc: #f3e7dd;
-  --on-choc-muted: #cdb6a5;
-  --mauve: #8b4a62;
+  --rb-box: #fff6f1;       /* tablecloth base */
+  --rb-check: rgba(226, 112, 104, 0.12); /* gingham stripes */
+  --rb-tin: #fff0d6;       /* cookbook body, active tab */
+  --rb-tab: #fff9f0;
+  --rb-paper: #fffdf7;     /* cards */
+  --rb-ink: #4f3328;       /* cocoa: text and outlines */
+  --rb-crumb: #7a5a4c;     /* muted text */
+  --rb-jam: #c8463d;       /* tomato: links, focus, delete */
+  --rb-jam-dark: #a8362e;
+  --rb-butter: #ffd36e;    /* main buttons */
+  --rb-butter-dark: #f7c24a;
+  --rb-pink: #ffd3d8;      /* ribbon, cookbook cover */
+  --rb-pink-dark: #f4b6be;
+  --rb-line: #ead6c2;      /* dashed lines */
+  --rb-rule-blue: #d9e1ea; /* ruled note paper */
+  --rb-outline: 2px solid var(--rb-ink);
+  --rb-sticker: 0 3px 0 var(--rb-ink);
+  --rb-display: "M PLUS Rounded 1c", "Arial Rounded MT Bold", system-ui, sans-serif;
+  --rb-body: "M PLUS Rounded 1c", system-ui, -apple-system, sans-serif;
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
-
-  --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --h1: clamp(2.25rem, 1.7rem + 2.6vw, 3.5rem);
-  --h2: clamp(1.625rem, 1.4rem + 1.1vw, 2.25rem);
-  --h3: clamp(1.1875rem, 1.1rem + 0.45vw, 1.5rem);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -39,31 +32,8 @@
   --space-7: 3rem;
 
   --gutter: clamp(1rem, 4vw, 2rem);
-  --radius: 6px;
-  --radius-lg: 12px;
   --tap: 2.75rem; /* minimum touch target */
-  --card-shadow: 0 8px 22px rgba(60, 42, 31, 0.07);
-  --shadow-float: 0 12px 32px rgba(60, 42, 31, 0.18);
   --page-width: 44rem;
-
-  /* Cookbook redesign (recipes page, nav, chat button). Other pages still use the tokens above. */
-  --rb-box: #fff6f1;       /* tablecloth base */
-  --rb-check: rgba(226, 112, 104, 0.12); /* gingham stripes */
-  --rb-tin: #fff0d6;       /* cookbook body, active tab */
-  --rb-tab: #fff9f0;
-  --rb-paper: #fffdf7;     /* recipe cards */
-  --rb-ink: #4f3328;       /* cocoa: text and outlines */
-  --rb-crumb: #7a5a4c;
-  --rb-jam: #c8463d;       /* tomato: links, focus, delete */
-  --rb-jam-dark: #a8362e;
-  --rb-butter: #ffd36e;    /* main buttons */
-  --rb-butter-dark: #f7c24a;
-  --rb-rule: #4f3328;
-  --rb-line: #ead6c2;      /* dashed lines */
-  --rb-outline: 2px solid var(--rb-ink);
-  --rb-sticker: 0 3px 0 var(--rb-ink);
-  --rb-display: "M PLUS Rounded 1c", "Arial Rounded MT Bold", system-ui, sans-serif;
-  --rb-body: "M PLUS Rounded 1c", system-ui, -apple-system, sans-serif;
 }
 
 *,
@@ -79,59 +49,57 @@ html {
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: 1.55;
   min-height: 100vh;
   min-height: 100dvh;
+  background-color: var(--rb-box);
+  /* Gingham: two sets of stripes that overlap into checks */
+  background-image:
+    linear-gradient(90deg, var(--rb-check) 50%, transparent 50%),
+    linear-gradient(var(--rb-check) 50%, transparent 50%);
+  background-size: 28px 28px;
+  color: var(--rb-ink);
+  font-family: var(--rb-body);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 1.15;
-  color: var(--text);
+h1, h2, h3, h4 {
+  font-family: var(--rb-display);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--rb-ink);
   text-wrap: balance;
 }
-
-h1 { font-size: var(--h1); }
-h2 { font-size: var(--h2); }
-h3 { font-size: var(--h3); }
 
 p, li {
   overflow-wrap: anywhere;
 }
 
-/* ---------- Forms ---------- */
-
-/* Small uppercase labels: form labels, buttons and metadata share this style */
-label,
-button,
-.button,
-.eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+:focus-visible {
+  outline: 3px solid var(--rb-jam);
+  outline-offset: 2px;
 }
+
+a {
+  color: var(--rb-jam-dark);
+  font-weight: 700;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--rb-ink);
+}
+
+/* ---------- Forms ---------- */
 
 label {
   display: block;
-  margin-bottom: var(--space-2);
-  color: var(--text-muted);
-}
-
-.label-dot {
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--mauve);
-  flex-shrink: 0;
+  margin-bottom: 0.375rem;
+  color: var(--rb-ink);
+  font-size: 0.9375rem;
+  font-weight: 700;
 }
 
 input,
@@ -140,124 +108,141 @@ textarea {
   display: block;
   width: 100%;
   min-height: var(--tap);
-  padding: 0.625rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   margin-bottom: var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  border: var(--rb-outline);
+  border-radius: 12px;
+  background: var(--rb-paper);
+  color: var(--rb-ink);
   font: inherit;
   font-size: 1rem; /* 16px keeps iOS from zooming on focus */
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input::placeholder {
-  color: #9a9388;
+  color: #a08576;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 3px var(--rb-butter);
 }
 
 input[type="checkbox"] {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.25rem;
+  height: 1.25rem;
   min-height: 0;
   margin: 0;
   padding: 0;
   flex-shrink: 0;
-  accent-color: var(--accent);
+  accent-color: var(--rb-jam);
   cursor: pointer;
 }
 
 .form-error {
-  color: var(--danger);
-  font-size: var(--text-sm);
   margin-bottom: var(--space-3);
+  color: var(--rb-jam-dark);
+  font-size: 0.9375rem;
+  font-weight: 700;
 }
 
-/* ---------- Buttons and links ---------- */
+/* ---------- Buttons: sticker buttons that press down ---------- */
 
 button,
-.button {
+.button,
+.rb-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   min-height: var(--tap);
-  padding: 0.5rem 1.125rem;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--on-accent);
+  padding: 0.5rem 1.25rem;
+  border: var(--rb-outline);
+  border-radius: 999px;
+  background: var(--rb-butter);
+  box-shadow: var(--rb-sticker);
+  color: var(--rb-ink);
+  font-family: var(--rb-body);
+  font-size: 0.9375rem;
+  font-weight: 800;
   line-height: 1.2;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition: transform 0.08s, box-shadow 0.08s, background-color 0.15s;
 }
 
 button:hover,
-.button:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--on-accent);
-  text-decoration: none;
+.button:hover,
+.rb-button:hover {
+  background: var(--rb-butter-dark);
+  color: var(--rb-ink);
+}
+
+button:active:not(:disabled),
+.button:active,
+.rb-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--rb-ink);
 }
 
 button:disabled,
 button:disabled:hover {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.btn-secondary:disabled:hover {
-  background: transparent;
+.btn-secondary,
+.rb-ghost {
+  background: var(--rb-paper);
+  font-weight: 700;
 }
 
-.btn-secondary {
-  background: transparent;
-  border-color: var(--border-strong);
-  color: var(--text);
+.btn-secondary:hover,
+.rb-ghost:hover {
+  background: var(--rb-tin);
 }
 
-.btn-secondary:hover {
-  background: var(--surface-sunken);
-  border-color: var(--border-strong);
-  color: var(--text);
+.btn-secondary:disabled:hover,
+.rb-ghost:disabled:hover {
+  background: var(--rb-paper);
 }
 
-.btn-danger {
-  background: transparent;
-  border-color: var(--border-strong);
-  color: var(--danger);
+.btn-danger,
+.rb-danger {
+  background: var(--rb-paper);
+  color: var(--rb-jam-dark);
+  font-weight: 700;
 }
 
-.btn-danger:hover {
-  background: var(--danger);
-  border-color: var(--danger);
+.btn-danger:hover,
+.rb-danger:hover {
+  background: var(--rb-jam);
   color: #fff;
 }
 
-.btn-block {
+.rb-text-button {
+  min-height: 2.5rem;
+  padding: 0 0.5rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--rb-crumb);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.rb-text-button:hover {
+  background: transparent;
+  color: var(--rb-ink);
+}
+
+.btn-block,
+.rb-block {
   width: 100%;
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-a {
-  color: var(--link);
-  text-underline-offset: 0.15em;
-}
-
-a:hover {
-  color: var(--text);
 }
 
 /* ---------- Layout ---------- */
@@ -267,52 +252,95 @@ a:hover {
 .recipes-container {
   width: min(100% - 2 * var(--gutter), var(--page-width));
   margin-inline: auto;
-  padding-block: clamp(1.5rem, 5vw, 3rem) 6rem; /* bottom room for the chat button */
+  padding-block: clamp(1.75rem, 5vw, 3rem) 6rem; /* bottom room for the chat button */
 }
 
-/* A container that rides up over the page header, like a card laid on the band */
-.pulled-up {
-  position: relative;
-  z-index: 1;
-  margin-top: calc(-1 * clamp(2.5rem, 6vw, 3.5rem));
-  padding-top: 0;
-}
-
+/* A cookbook card: paper, cocoa outline, sticker shadow */
 .card,
-.add-card,
-.converter-card,
-.auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--card-shadow);
+.add-card {
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--rb-ink);
   padding: clamp(1.25rem, 4vw, 2.25rem);
 }
 
-.circle-arrow {
+/* ---------- Page header with a ribbon title ---------- */
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-meta {
+  margin-top: 0.875rem;
+  color: var(--rb-crumb);
+}
+
+/* Title on a ribbon: an outlined face with two notched tails behind it */
+.ribbon {
+  position: relative;
+  isolation: isolate;
+  display: inline-block;
+  margin-left: 0.95em;
+  font-size: clamp(1.375rem, 1.2rem + 1vw, 1.875rem);
+  line-height: 1.2;
+}
+
+.ribbon-face {
+  position: relative;
+  display: inline-block;
+  padding: 0.2em 0.85em 0.25em;
+  background: var(--rb-pink);
+  border: var(--rb-outline);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 var(--rb-ink);
+  color: var(--rb-ink);
+}
+
+.ribbon::before,
+.ribbon::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0.4em;
+  bottom: -0.4em;
+  width: 1.4em;
+  background: var(--rb-pink-dark);
+}
+
+.ribbon::before {
+  left: -0.95em;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0.45em 50%);
+}
+
+.ribbon::after {
+  right: -0.95em;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 0.45em) 50%, 100% 100%, 0 100%);
+}
+
+/* Numbered step badges, used on recipe cards and the recipe form */
+.step-badge {
   display: inline-grid;
   place-items: center;
   flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1.5px solid currentColor;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: var(--rb-outline);
   border-radius: 50%;
-  color: var(--choc);
-  transition: transform 0.2s ease;
-}
-
-.circle-arrow.open {
-  transform: rotate(90deg);
-}
-
-.page-subtitle {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  margin-top: var(--space-1);
+  background: var(--rb-butter);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .muted {
-  color: var(--text-muted);
+  color: var(--rb-crumb);
 }
 
 @keyframes fadeIn {

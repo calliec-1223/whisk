@@ -2,7 +2,7 @@ import {useState} from 'react'
 import { apiFetch } from './api'
 import { Link, useNavigate } from 'react-router-dom'
 import './Auth.css'
-import { BrushRing, HandUnderline } from './icons'
+import { WhiskIcon } from './icons'
 
 function Login({ onLogin }) {
     const [form, setForm] = useState({
@@ -34,11 +34,13 @@ function Login({ onLogin }) {
     }
     return (
         <div className="auth-container">
-            <BrushRing className="auth-ring" />
-            <div className="auth-card">
-                <h1>Whisk</h1>
-                <HandUnderline className="auth-underline" />
-                <p className="page-subtitle">Log in to your recipes.</p>
+            <div className="cookbook-cover">
+                <div className="cover-plate">
+                    <WhiskIcon size={34} />
+                    <h1>Whisk</h1>
+                    <p>My recipe book</p>
+                </div>
+                <p className="cover-subtitle">Welcome back! Log in to open your recipe book.</p>
                 <label htmlFor="login-username">Username</label>
                 <input
                     id="login-username"
@@ -58,7 +60,7 @@ function Login({ onLogin }) {
                     onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                 />
                 {error && <p className="form-error">{error}</p>}
-                <button onClick={handleLogin}>Log in</button>
+                <button type="button" onClick={handleLogin}>Log in</button>
                 <p className="auth-switch">No account yet? <Link to="/signup">Sign up</Link></p>
             </div>
         </div>

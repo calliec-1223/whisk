@@ -28,66 +28,71 @@ button.chat-fab:active {
   box-shadow: 0 1px 0 var(--rb-ink);
 }
 
+/* The assistant panel: a recipe note card taped to the page */
 .chat-widget {
   position: fixed;
   right: var(--gutter);
-  bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  bottom: calc(5rem + env(safe-area-inset-bottom));
   z-index: 999;
   display: flex;
   flex-direction: column;
   width: min(24rem, 100vw - 2 * var(--gutter));
-  height: min(34rem, 100dvh - 7rem);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-float);
-  overflow: hidden;
+  height: min(34rem, 100dvh - 8rem);
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+}
+
+/* A strip of tape across the top */
+.chat-widget::before {
+  content: "";
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  width: 5.5rem;
+  height: 1.5rem;
+  background: rgba(255, 211, 110, 0.75);
+  border: 1.5px solid rgba(79, 51, 40, 0.35);
+  border-radius: 3px;
+  transform: translateX(-50%) rotate(-3deg);
 }
 
 .chat-widget-header {
-  padding: var(--space-4);
-  background: var(--choc);
-  color: var(--on-choc);
-}
-
-.chat-widget-header .eyebrow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--on-choc-muted);
-  font-size: 0.6875rem;
+  padding: 1.25rem 1.25rem 0.875rem;
+  background: var(--rb-pink);
+  border-bottom: 2px dashed var(--rb-ink);
+  border-radius: 16px 16px 0 0;
 }
 
 .chat-widget-header h3 {
-  margin: var(--space-1) 0 2px;
-  color: #f8efe7;
   font-size: 1.25rem;
-  font-weight: 300;
 }
 
 .chat-widget-header p {
-  color: var(--on-choc-muted);
-  font-size: var(--text-xs);
+  color: var(--rb-crumb);
+  font-size: var(--text-sm);
+  font-weight: 700;
 }
 
 .chat-messages {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   padding: var(--space-4);
   overflow-y: auto;
 }
 
 .chat-empty {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+  color: var(--rb-crumb);
+  font-weight: 700;
 }
 
 .chat-message {
   display: flex;
   flex-direction: column;
-  max-width: 88%;
+  max-width: 90%;
 }
 
 .chat-message.user {
@@ -96,37 +101,47 @@ button.chat-fab:active {
 }
 
 .chat-message.assistant {
-  align-self: flex-start;
+  align-self: stretch;
+  max-width: none;
 }
 
 .message-label {
-  margin-bottom: 2px;
-  color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+  color: var(--rb-crumb);
+  font-size: 0.8125rem;
+  font-weight: 800;
 }
 
 .message-bubble {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-lg);
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.5rem;
 }
 
+/* Your questions: little butter-yellow notes */
 .chat-message.user .message-bubble {
-  background: var(--accent-soft);
+  padding: 0.5rem 0.875rem;
+  background: var(--rb-butter);
+  border: 1.5px solid var(--rb-ink);
+  border-radius: 14px 14px 4px 14px;
 }
 
+/* Replies: written on ruled note paper with a red margin line.
+   Every gap is a multiple of the 1.5rem line so text sits on the lines. */
 .chat-message.assistant .message-bubble {
-  background: var(--surface-sunken);
+  padding: 0.75rem 0.75rem 0.75rem 1.25rem;
+  background-color: var(--rb-paper);
+  background-image:
+    linear-gradient(90deg, transparent 0.625rem, rgba(200, 70, 61, 0.45) 0.625rem, rgba(200, 70, 61, 0.45) calc(0.625rem + 1.5px), transparent calc(0.625rem + 1.5px)),
+    repeating-linear-gradient(transparent 0, transparent calc(1.5rem - 1px), var(--rb-rule-blue) calc(1.5rem - 1px), var(--rb-rule-blue) 1.5rem);
+  background-position: 0 0, 0 0.75rem;
+  border: 1.5px solid var(--rb-line);
+  border-radius: 6px;
 }
 
 .message-bubble p,
 .message-bubble ul,
 .message-bubble ol {
-  margin-bottom: var(--space-2);
+  margin-bottom: 1.5rem;
 }
 
 .message-bubble > :last-child {
@@ -141,36 +156,37 @@ button.chat-fab:active {
 .message-bubble h1,
 .message-bubble h2,
 .message-bubble h3 {
-  font-family: var(--font-sans);
+  margin: 0;
   font-size: 0.9375rem;
-  margin: var(--space-2) 0 var(--space-1);
+  line-height: 1.5rem;
 }
 
 .chat-input-row {
   display: flex;
   gap: var(--space-2);
   padding: var(--space-3);
-  border-top: 1px solid var(--border);
+  border-top: 2px dashed var(--rb-line);
 }
 
 .chat-input-row input {
   flex: 1;
   min-width: 0;
   margin: 0;
+  border-radius: 999px;
 }
 
 .loading-bubble {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   align-items: center;
-  min-height: 2.25rem;
+  min-height: 1.5rem;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--text-muted);
+  background: var(--rb-crumb);
   animation: pulse 1.2s infinite ease-in-out;
 }
 
@@ -184,7 +200,7 @@ button.chat-fab:active {
 
 @media (max-width: 40rem) {
   .chat-widget {
-    top: calc(var(--space-3) + env(safe-area-inset-top));
+    top: calc(var(--space-6) + env(safe-area-inset-top));
     left: var(--space-3);
     right: var(--space-3);
     width: auto;

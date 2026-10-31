@@ -2,7 +2,7 @@ import {useState} from 'react'
 import { apiFetch } from './api'
 import { Link, useNavigate } from 'react-router-dom'
 import './Auth.css'
-import { BrushRing, HandUnderline } from './icons'
+import { WhiskIcon } from './icons'
 
 
 function Signup() {
@@ -40,11 +40,13 @@ function Signup() {
 
     return (
         <div className="auth-container">
-            <BrushRing className="auth-ring" />
-            <div className="auth-card">
-                <h1>Whisk</h1>
-                <HandUnderline className="auth-underline" />
-                <p className="page-subtitle">Create an account to save your recipes.</p>
+            <div className="cookbook-cover">
+                <div className="cover-plate">
+                    <WhiskIcon size={34} />
+                    <h1>Whisk</h1>
+                    <p>My recipe book</p>
+                </div>
+                <p className="cover-subtitle">Start your own recipe book. It only takes a minute!</p>
                 <label htmlFor="signup-username">Username</label>
                 <input
                     id="signup-username"
@@ -73,7 +75,7 @@ function Signup() {
                     onKeyDown={(e) => e.key === 'Enter' && handleSignup()}
                 />
                 {error && <p className="form-error">{error}</p>}
-                <button onClick={handleSignup}>Create account</button>
+                <button type="button" onClick={handleSignup}>Create account</button>
                 <p className="auth-switch">Already have an account? <Link to="/">Log in</Link></p>
             </div>
         </div>

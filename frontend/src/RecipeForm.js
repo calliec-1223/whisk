@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CATEGORIES } from './categories'
 import './AddRecipe.css'
 import Toast from './Toast'
-import PageHero from './PageHero'
+import PageHeader from './PageHeader'
 
 const MAX_SERVINGS = 1000
 
@@ -58,7 +58,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
 
     const handleSubmit = () => {
         if (form.title.trim() === '' || form.ingredients.length === 0 || form.steps.length === 0 || form.servings === '') {
-            setError('Please fill all required fields.')
+            setError('Add a title, servings, and at least one ingredient and step.')
             return
         }
         const servings = Number(form.servings)
@@ -91,8 +91,8 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
 
     return (
         <div className="page-enter form-page">
-            <PageHero title={heading} overlap />
-            <div className="add-container pulled-up">
+            <div className="add-container">
+                <PageHeader title={heading} />
                 <div className="add-card">
                     <label htmlFor="recipe-title">Title</label>
                     <input
@@ -113,7 +113,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
                             onChange={(e) => setCurrentIngredient(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleAddIngredient()}
                         />
-                        <button className="btn-secondary" onClick={handleAddIngredient}>Add</button>
+                        <button type="button" className="btn-secondary" onClick={handleAddIngredient}>Add</button>
                     </div>
                     <ul className="ingredient-list">
                         {form.ingredients.map((ing, index) => (
@@ -138,12 +138,12 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
                             onChange={(e) => setCurrentStep(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleAddStep()}
                         />
-                        <button className="btn-secondary" onClick={handleAddStep}>Add</button>
+                        <button type="button" className="btn-secondary" onClick={handleAddStep}>Add</button>
                     </div>
                     <ul className="ingredient-list">
                         {form.steps.map((step, index) => (
                             <li key={index}>
-                                <span><span className="step-number">{index + 1}.</span>{step}</span>
+                                <span className="step-text"><span className="step-badge">{index + 1}</span>{step}</span>
                                 <div className="row-actions">
                                     <button aria-label="Move step up" onClick={() => moveStep(index, -1)}>↑</button>
                                     <button aria-label="Move step down" onClick={() => moveStep(index, 1)}>↓</button>
@@ -190,7 +190,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
                     </div>
 
                     {error && <p className="form-error">{error}</p>}
-                    <button className="save-btn" onClick={handleSubmit} disabled={saving}>{saveLabel}</button>
+                    <button type="button" className="save-btn" onClick={handleSubmit} disabled={saving}>{saveLabel}</button>
                     {showToast && <Toast message={toastMessage} onClose={() => setShowToast(false)} />}
                 </div>
             </div>

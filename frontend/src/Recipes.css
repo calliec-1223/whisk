@@ -1,20 +1,8 @@
-/* Recipes page: a cozy cookbook on a gingham tablecloth.
-   Pastel tabs mark categories, each recipe is a card in the book.
-   Selectors are prefixed with .recipes-page so they beat the global
-   button/input/label rules in styles.css. */
+/* Recipes page: pastel tabs mark categories, each recipe is a card in the book.
+   Base styles (buttons, inputs, ribbon, gingham) live in styles.css. */
 
 .recipes-page {
   --page-width: 56rem;
-  min-height: 100vh;
-  background-color: var(--rb-box);
-  /* Gingham: two sets of stripes that overlap into checks */
-  background-image:
-    linear-gradient(90deg, var(--rb-check) 50%, transparent 50%),
-    linear-gradient(var(--rb-check) 50%, transparent 50%);
-  background-size: 28px 28px;
-  color: var(--rb-ink);
-  font-family: var(--rb-body);
-  font-weight: 500;
 }
 
 /* One pastel per category, shared by the tabs and the card badges */
@@ -28,193 +16,11 @@
 .recipes-page [data-cat="no-bake"] { --cat: #d4eedb; }
 .recipes-page [data-cat="other"] { --cat: #d6ebf3; }
 
-.recipes-page .recipes-container {
-  padding-top: clamp(1.75rem, 5vw, 3rem);
-}
-
-.recipes-page :is(h1, h2, h3, h4) {
-  font-family: var(--rb-display);
-  font-weight: 800;
-  color: var(--rb-ink);
-}
-
-.recipes-page :focus-visible {
-  outline: 3px solid var(--rb-jam);
-  outline-offset: 2px;
-}
-
-/* ---------- Buttons ---------- */
-
-/* Reset the global uppercase button style for this page */
-.recipes-page :where(button, .button, .rb-button) {
-  min-height: 2.5rem;
-  font-family: var(--rb-body);
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-/* Main and secondary buttons look like sticker buttons that press down */
-.recipes-page .rb-button,
-.recipes-page .rb-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.25rem;
-  border: var(--rb-outline);
-  border-radius: 999px;
-  box-shadow: var(--rb-sticker);
-  color: var(--rb-ink);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: transform 0.08s, box-shadow 0.08s, background-color 0.15s;
-}
-
-.recipes-page .rb-button {
-  background: var(--rb-butter);
-  font-weight: 800;
-}
-
-.recipes-page .rb-button:hover {
-  background: var(--rb-butter-dark);
-  border-color: var(--rb-ink);
-  color: var(--rb-ink);
-}
-
-.recipes-page .rb-ghost {
-  background: var(--rb-paper);
-}
-
-.recipes-page .rb-ghost:hover {
-  background: var(--rb-tin);
-  border-color: var(--rb-ink);
-  color: var(--rb-ink);
-}
-
-.recipes-page :is(.rb-button, .rb-ghost):active:not(:disabled) {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--rb-ink);
-}
-
-.recipes-page .rb-ghost:disabled,
-.recipes-page .rb-ghost:disabled:hover {
-  background: var(--rb-paper);
-  box-shadow: none;
-}
-
-.recipes-page .rb-danger {
-  color: var(--rb-jam-dark);
-}
-
-.recipes-page .rb-danger:hover {
-  background: var(--rb-jam);
-  border-color: var(--rb-ink);
-  color: #fff;
-}
-
-.recipes-page .rb-text-button {
-  min-height: 2.5rem;
-  padding: 0 0.5rem;
-  border: 0;
-  background: transparent;
-  color: var(--rb-crumb);
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.recipes-page .rb-text-button:hover {
-  background: transparent;
-  color: var(--rb-ink);
-}
-
-.recipes-page .rb-block {
-  width: 100%;
-}
-
-/* ---------- Inputs ---------- */
-
 .recipes-page input:not([type="checkbox"]) {
   margin: 0;
-  border: var(--rb-outline);
-  background: var(--rb-paper);
-  color: var(--rb-ink);
-  font-family: var(--rb-body);
-  font-weight: 500;
 }
 
-.recipes-page input::placeholder {
-  color: #a08576;
-}
-
-.recipes-page input:focus {
-  border-color: var(--rb-ink);
-  box-shadow: 0 0 0 3px var(--rb-butter);
-}
-
-.recipes-page input[type="checkbox"] {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: var(--rb-jam);
-}
-
-/* ---------- Header ---------- */
-
-.box-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Title on a ribbon: a outlined face with two notched tails behind it */
-.recipes-page .ribbon {
-  position: relative;
-  isolation: isolate;
-  display: inline-block;
-  margin-left: 0.95em;
-  font-size: clamp(1.375rem, 1.2rem + 1vw, 1.875rem);
-  line-height: 1.2;
-}
-
-.ribbon-face {
-  position: relative;
-  display: inline-block;
-  padding: 0.2em 0.85em 0.25em;
-  background: #ffd3d8;
-  border: var(--rb-outline);
-  border-radius: 6px;
-  box-shadow: 0 2px 0 var(--rb-ink);
-  color: var(--rb-ink);
-}
-
-.ribbon::before,
-.ribbon::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 0.4em;
-  bottom: -0.4em;
-  width: 1.4em;
-  background: #f4b6be;
-}
-
-.ribbon::before {
-  left: -0.95em;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0.45em 50%);
-}
-
-.ribbon::after {
-  right: -0.95em;
-  clip-path: polygon(0 0, 100% 0, calc(100% - 0.45em) 50%, 100% 100%, 0 100%);
-}
-
-.box-count {
-  margin-top: 0.875rem;
-  color: var(--rb-crumb);
-}
+/* ---------- Search and assistant link ---------- */
 
 .box-tools {
   display: flex;
@@ -236,7 +42,9 @@
   border: 0;
   border-radius: 999px;
   background: var(--rb-paper);
+  box-shadow: none;
   color: var(--rb-jam-dark);
+  font-weight: 700;
   text-decoration: underline;
   text-decoration-color: rgba(200, 70, 61, 0.4);
   text-underline-offset: 0.25em;
@@ -246,6 +54,10 @@
   background: var(--rb-paper);
   color: var(--rb-jam-dark);
   text-decoration-color: currentColor;
+}
+
+.recipes-page .ask-link:active {
+  transform: none;
 }
 
 /* ---------- The cookbook: pastel tabs + body ---------- */
@@ -269,6 +81,7 @@
   border: var(--rb-outline);
   border-radius: 12px 12px 0 0;
   background: var(--cat);
+  box-shadow: none;
   color: var(--rb-ink);
   font-size: 0.875rem;
   font-weight: 700;
@@ -373,9 +186,12 @@
   min-height: 2.75rem;
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
   color: inherit;
   font: inherit;
+  white-space: normal;
   text-align: left;
 }
 
@@ -636,4 +452,10 @@
   .recipe-actions button {
     flex: 1;
   }
+}
+
+/* Tabs and card titles aren't sticker buttons, so they don't press down */
+.recipes-page :is(.box-tab, .card-toggle):active {
+  transform: none;
+  box-shadow: none;
 }

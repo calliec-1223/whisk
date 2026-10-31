@@ -4,9 +4,9 @@ import RecipeForm from './RecipeForm'
 function AddRecipe() {
     return (
         <RecipeForm
-            heading="New recipe"
+            heading="Write a new recipe"
             saveLabel="Save recipe"
-            toastMessage="Recipe saved"
+            toastMessage="Recipe saved! Nice work."
             save={(body) => authFetch('/recipes', { method: 'POST', body })}
         />
     )

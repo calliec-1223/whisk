@@ -30,7 +30,7 @@ function EditRecipePage() {
         <RecipeForm
             heading="Edit recipe"
             saveLabel="Save changes"
-            toastMessage="Recipe updated"
+            toastMessage="Changes saved!"
             initialRecipe={recipe}
             save={(body) => authFetch(`/recipes/${recipe.id}`, { method: 'PUT', body })}
         />
