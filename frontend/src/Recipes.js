@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authFetch } from './api'
 import RecipeList from './RecipeList'
 import { CATEGORIES } from './categories'
@@ -11,12 +11,14 @@ import SpinnerModal from './Spinner'
 import { useCelebrate } from './Celebrate'
 import { play } from './sound'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 12
 const UNDO_MS = 6000
 const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
 
 function Recipes() {
     const [recipes, setRecipes] = useState([])
+    const location = useLocation()
+    const navigate = useNavigate()
     const { setIsOpen: setChatOpen } = useChat()
     const [search, setSearch] = useState('')
     const [categoryFilter, setCategoryFilter] = useState('')
@@ -32,8 +34,7 @@ function Recipes() {
     const [notice, setNotice] = useState('')
     const clearNotice = useCallback(() => setNotice(''), [])
     const [showSpinner, setShowSpinner] = useState(false)
-    // For the delete/undo animations: the card shrinking away, and the one popping back
-    const [leavingId, setLeavingId] = useState(null)
+    // A recipe brought back with Undo pops into the grid
     const [arrivingId, setArrivingId] = useState(null)
     const celebrate = useCelebrate()
 
@@ -97,14 +98,7 @@ function Recipes() {
         pendingRef.current = { recipe, timer }
         setPendingDelete({ recipe })
         setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id))
-        // Let the card shrink away before it leaves the list
-        setLeavingId(recipe.id)
-        setTimeout(() => {
-            setLeavingId(null)
-            if (pendingRef.current?.recipe.id === recipe.id) {
-                setRecipes(prev => prev.filter(r => r.id !== recipe.id))
-            }
-        }, 300)
+        setRecipes(prev => prev.filter(r => r.id !== recipe.id))
     }
 
     const undoDelete = () => {
@@ -114,13 +108,18 @@ function Recipes() {
         pendingRef.current = null
         setPendingDelete(null)
         setNotice('Recipe restored!')
-        setLeavingId(null)
         setArrivingId(pending.recipe.id)
         setTimeout(() => setArrivingId(null), 600)
         fetchRecipes()
     }
 
     useEffect(() => {
+        // Coming back from a recipe page after "Yes, delete": start the delete here so Undo works
+        const deleted = location.state?.deleted
+        if (deleted) {
+            navigate(location.pathname, { replace: true, state: null }) // a refresh shouldn't delete again
+            deleteRecipe(deleted)
+        }
         fetchRecipes()
         // Leaving the page or closing the tab sends any waiting delete right away
         window.addEventListener('pagehide', commitDelete)
@@ -236,8 +235,6 @@ function Recipes() {
                         ) : (
                             <RecipeList
                                 recipes={pagedRecipes}
-                                onDelete={deleteRecipe}
-                                leavingId={leavingId}
                                 arrivingId={arrivingId}
                                 selectedRecipes={selectedRecipes}
                                 onToggleSelect={toggleSelectRecipe}

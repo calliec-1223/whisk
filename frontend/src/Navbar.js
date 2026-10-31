@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import {NavLink, useNavigate} from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
 import { SoundIcon, WhiskIcon } from './icons'
 import { play, setSoundsOn, soundsOn } from './sound'
 
 function Navbar(){
     const navigate = useNavigate()
+    const { pathname } = useLocation()
+    // A single recipe, or baking one, still counts as being in the recipe book
+    const inRecipeBook = pathname.startsWith('/recipe/') || pathname.startsWith('/bake/')
     const [sounds, setSounds] = useState(soundsOn)
 
     const toggleSounds = () => {
@@ -22,7 +25,7 @@ function Navbar(){
         <nav className="navbar">
             <span className="navbar-brand"><WhiskIcon size={22} />Whisk</span>
             <div className="navbar-links">
-                <NavLink to="/recipes">Recipes</NavLink>
+                <NavLink to="/recipes" className={({ isActive }) => (isActive || inRecipeBook ? 'active' : '')}>Recipes</NavLink>
                 <NavLink to="/add">Add recipe</NavLink>
                 <NavLink to="/convert">Converter</NavLink>
                 <NavLink to="/stickers">Stickers</NavLink>

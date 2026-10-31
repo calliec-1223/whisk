@@ -149,38 +149,34 @@
   text-align: center;
 }
 
-/* ---------- Recipe cards ---------- */
+/* ---------- Recipe grid ---------- */
 
-.card-stack {
+.recipe-grid {
+  list-style: none;
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
 }
 
-/* Each card sits in a slot that can shrink to nothing (delete) or pop in (undo) */
-.card-slot {
-  display: grid;
-  grid-template-rows: 1fr;
-  margin-bottom: 0.5rem;
-  transition: grid-template-rows 0.3s ease, margin-bottom 0.3s ease, opacity 0.25s ease;
-}
-
-.card-slot-inner {
-  min-height: 0;
+.grid-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  padding-bottom: 4px; /* room for the card's shadow */
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 16px;
+  box-shadow: 0 3px 0 var(--rb-ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card-slot.leaving {
-  grid-template-rows: 0fr;
-  margin-bottom: 0;
-  opacity: 0;
+.grid-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 var(--rb-ink);
 }
 
-.card-slot.leaving .index-card {
-  transform: translateX(1.5rem) rotate(1.5deg);
-  transition: transform 0.3s ease;
-}
-
-.card-slot.arriving .index-card {
+/* A recipe brought back with Undo pops in */
+.grid-card.arriving {
   animation: card-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
@@ -188,95 +184,88 @@
   from { opacity: 0; transform: scale(0.9); }
 }
 
-/* Opened card details slide open instead of appearing all at once */
-.details-wrap {
+/* Pastel band with the category sticker */
+.grid-card-band {
+  position: relative;
   display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
+  place-items: center;
+  height: 6.5rem;
+  background: var(--cat);
+  border-bottom: var(--rb-outline);
 }
 
-.details-clip {
-  min-height: 0;
-  overflow: hidden;
+.grid-card-check {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 2; /* above the card-wide link */
 }
 
-.index-card.open .details-wrap {
-  grid-template-rows: 1fr;
+.grid-card-medal {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.625rem;
 }
 
-.index-card {
-  background: var(--rb-paper);
-  border: var(--rb-outline);
-  border-radius: 14px;
-  box-shadow: 0 3px 0 rgba(79, 51, 40, 0.25);
+.grid-card-body {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem 1rem;
 }
 
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.75rem 1.25rem 0.25rem;
-}
-
-.recipes-page .card-head h3 {
-  flex: 1;
-  min-width: 0;
-  font-size: clamp(1.1875rem, 1.1rem + 0.4vw, 1.375rem);
+.recipes-page .grid-card-body h3 {
+  font-size: 1.125rem;
   line-height: 1.3;
 }
 
-.recipes-page .card-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  min-height: 2.75rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: inherit;
-  font: inherit;
-  white-space: normal;
-  text-align: left;
+.card-link {
+  color: var(--rb-ink);
+  font-weight: 800;
+  text-decoration: none;
 }
 
-.recipes-page .card-toggle:hover {
-  background: transparent;
+/* Stretch the link over the whole card so any part of it opens the recipe */
+.card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 14px;
+}
+
+.card-link:hover {
   color: var(--rb-jam-dark);
 }
 
-.card-toggle span {
-  overflow-wrap: anywhere;
+.card-link:focus-visible {
+  outline: none;
 }
 
-.card-chevron {
-  flex-shrink: 0;
-  color: var(--rb-ink);
-  transition: transform 0.2s ease;
+.card-link:focus-visible::after {
+  outline: 3px solid var(--rb-jam);
+  outline-offset: -5px; /* inside the card, which clips anything outside */
 }
 
-.index-card.open .card-chevron {
-  transform: rotate(180deg);
-}
-
-.card-meta {
+.grid-card-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.375rem 1rem;
-  padding: 0 1.25rem 0.875rem 3.375rem; /* lines up under the title */
+  gap: 0.375rem 0.875rem;
   color: var(--rb-crumb);
   font-size: 0.875rem;
+}
+
+.grid-card-baked {
+  color: var(--rb-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.3125rem;
-  padding: 0.125rem 0.625rem 0.125rem 0.5rem;
+  padding: 0.125rem 0.625rem;
   border: 1.5px solid var(--rb-ink);
   border-radius: 999px;
   background: var(--cat);
@@ -284,23 +273,59 @@
   font-weight: 700;
 }
 
-.index-card.open .card-meta {
-  border-bottom: 2px dashed var(--rb-line);
+/* ---------- Recipe page ---------- */
+
+.recipe-page {
+  --page-width: 46rem;
 }
 
-/* ---------- Opened card ---------- */
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
 
-.recipe-details {
-  padding: 1.25rem 1.25rem 1.5rem 3.375rem;
+.recipe-sheet {
+  overflow: hidden;
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+}
+
+.recipe-sheet-band {
+  display: grid;
+  place-items: center;
+  height: 8rem;
+  background: var(--cat);
+  border-bottom: var(--rb-outline);
+}
+
+.recipe-sheet-body {
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.recipes-page .recipe-sheet-body h1 {
+  margin-bottom: 0.5rem;
+  font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+}
+
+.recipe-sheet-body .grid-card-meta {
+  margin-bottom: 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.recipe-sheet-body .recipe-actions,
+.recipe-sheet-body .delete-confirm {
+  margin-bottom: 0.5rem;
 }
 
 .recipe-section {
-  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
 }
 
-.recipes-page .recipe-section h4 {
+.recipes-page .recipe-section h2 {
   margin-bottom: 0.375rem;
-  font-size: 1.0625rem;
+  font-size: 1.125rem;
 }
 
 .ingredient-display-list {
@@ -477,14 +502,32 @@
 /* ---------- Phones ---------- */
 
 @media (max-width: 40rem) {
-  .card-head {
-    padding-inline: 1rem;
+  .recipe-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
   }
 
-  .card-meta,
-  .recipe-details {
-    padding-left: 1rem;
-    padding-right: 1rem;
+  .grid-card-band {
+    height: 5rem;
+  }
+
+  .grid-card-band .sticker-large {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .grid-card-body {
+    gap: 0.375rem;
+    padding: 0.625rem 0.75rem 0.75rem;
+  }
+
+  .recipes-page .grid-card-body h3 {
+    font-size: 1rem;
+  }
+
+  .grid-card-meta,
+  .grid-card-baked {
+    font-size: 0.8125rem;
   }
 
   .recipes-page .scale-input {
@@ -498,7 +541,7 @@
 }
 
 /* Tabs and card titles aren't sticker buttons, so they don't press down */
-.recipes-page :is(.box-tab, .card-toggle):active {
+.recipes-page .box-tab:active {
   transform: none;
   box-shadow: none;
 }
