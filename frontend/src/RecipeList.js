@@ -3,7 +3,7 @@ import { authFetch } from './api'
 import './Recipes.css'
 import {useNavigate} from 'react-router-dom'
 import { CATEGORIES } from './categories'
-import { ChevronIcon } from './icons'
+import { CategoryIcon, ChevronIcon } from './icons'
 
 const categoryLabel = (value) => CATEGORIES.find(c => c.value === value)?.label
 
@@ -56,7 +56,10 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                     </div>
                     <p className="card-meta">
                         {categoryLabel(recipe.category) && (
-                            <span className="chip" data-cat={recipe.category}>{categoryLabel(recipe.category)}</span>
+                            <span className="chip" data-cat={recipe.category}>
+                                <CategoryIcon cat={recipe.category} size={14} />
+                                {categoryLabel(recipe.category)}
+                            </span>
                         )}
                         <span>Serves {recipe.servings}</span>
                     </p>
@@ -104,7 +107,7 @@ function RecipeList ({ recipes, onRecipeDeleted, selectedRecipes, onToggleSelect
                             </div>
                             {desiredServings[recipe.id] && (
                                 <p className="scale-result">
-                                    Multiply each ingredient by {+(desiredServings[recipe.id] / recipe.servings).toFixed(2)}.
+                                    Multiply each ingredient by {+(desiredServings[recipe.id] / recipe.servings).toFixed(2)} to serve {desiredServings[recipe.id]}!
                                 </p>
                             )}
                         </div>

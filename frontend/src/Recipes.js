@@ -4,6 +4,7 @@ import { authFetch } from './api'
 import RecipeList from './RecipeList'
 import { CATEGORIES } from './categories'
 import { useChat } from './ChatContext'
+import { BowlIcon, CategoryIcon } from './icons'
 
 const PAGE_SIZE = 10
 const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
@@ -16,6 +17,8 @@ function Recipes() {
     const [selectedRecipes, setSelectedRecipes] = useState([])
     const [showShoppingList, setShowShoppingList] = useState(false)
     const [page, setPage] = useState(1)
+    // Ticked shopping-list items, keyed "recipeId-lineIndex"
+    const [boughtItems, setBoughtItems] = useState({})
 
     const filteredRecipes = recipes.filter(r => {
     const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase())
@@ -62,16 +65,29 @@ function Recipes() {
     }
 
     const emptyText = recipes.length === 0
-        ? 'No recipes yet. Add your first one with New recipe.'
-        : 'No recipes match. Try another search or category.'
+        ? "Your recipe book is empty. Let's add your first recipe!"
+        : 'No recipes match. Try a different search or tab!'
+
+    const shoppingKeys = selectedRecipes.flatMap(r =>
+        r.ingredients.split('\n').map((_, i) => `${r.id}-${i}`))
+    const allBought = shoppingKeys.length > 0 && shoppingKeys.every(k => boughtItems[k])
+
+    const toggleBought = (key) => setBoughtItems({ ...boughtItems, [key]: !boughtItems[key] })
+
+    const closeShoppingList = () => {
+        setShowShoppingList(false)
+        setBoughtItems({})
+    }
+
+    const recipeWord = (n) => (n === 1 ? 'recipe' : 'recipes')
 
     return (
         <div className="page-enter recipes-page">
             <div className="recipes-container">
                 <header className="box-header">
                     <div>
-                        <h1>Recipes</h1>
-                        <p className="box-count">{recipes.length} saved</p>
+                        <h1 className="ribbon"><span className="ribbon-face">My recipe book</span></h1>
+                        <p className="box-count">{recipes.length} {recipeWord(recipes.length)} collected</p>
                     </div>
                     <Link to="/add" className="rb-button">New recipe</Link>
                 </header>
@@ -86,7 +102,7 @@ function Recipes() {
                         onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                     />
                     <button type="button" className="ask-link" onClick={() => setChatOpen(true)}>
-                        Have a baking question? Ask the assistant
+                        Stuck on a bake? Ask the assistant!
                     </button>
                 </div>
 
@@ -101,6 +117,7 @@ function Recipes() {
                                 aria-pressed={categoryFilter === c.value}
                                 onClick={() => chooseCategory(c.value)}
                             >
+                                <CategoryIcon cat={c.value} />
                                 {c.label}
                             </button>
                         ))}
@@ -110,19 +127,22 @@ function Recipes() {
                         {selectedRecipes.length > 0 && (
                             <div className="shopping-bar">
                                 <span>
-                                    {selectedRecipes.length} {selectedRecipes.length === 1 ? 'recipe' : 'recipes'} selected
+                                    {selectedRecipes.length} {recipeWord(selectedRecipes.length)} picked
                                 </span>
                                 <button type="button" className="rb-text-button" onClick={() => setSelectedRecipes([])}>
                                     Clear
                                 </button>
                                 <button type="button" className="rb-button" onClick={() => setShowShoppingList(true)}>
-                                    Shopping list
+                                    Make shopping list
                                 </button>
                             </div>
                         )}
 
                         {pagedRecipes.length === 0 ? (
-                            <p className="empty-state">{emptyText}</p>
+                            <div className="empty-state">
+                                <BowlIcon size={44} />
+                                <p>{emptyText}</p>
+                            </div>
                         ) : (
                             <RecipeList
                                 recipes={pagedRecipes}
@@ -157,7 +177,7 @@ function Recipes() {
                 </div>
 
                 {showShoppingList && (
-                    <div className="modal-backdrop" onClick={() => setShowShoppingList(false)}>
+                    <div className="modal-backdrop" onClick={closeShoppingList}>
                         <div
                             className="modal"
                             role="dialog"
@@ -166,18 +186,25 @@ function Recipes() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <h2 id="shopping-list-title">Shopping list</h2>
+                            <div className="stamp-slot" role="status">
+                                {allBought && <span className="stamp">All set!</span>}
+                            </div>
                             {selectedRecipes.map(recipe => (
                                 <div key={recipe.id} className="shopping-group">
                                     <h3>{recipe.title}</h3>
                                     {recipe.ingredients.split('\n').map((ing, i) => (
                                         <label key={i} className="shopping-item">
-                                            <input type="checkbox" />
+                                            <input
+                                                type="checkbox"
+                                                checked={!!boughtItems[`${recipe.id}-${i}`]}
+                                                onChange={() => toggleBought(`${recipe.id}-${i}`)}
+                                            />
                                             <span>{ing}</span>
                                         </label>
                                     ))}
                                 </div>
                             ))}
-                            <button type="button" className="rb-ghost rb-block" onClick={() => setShowShoppingList(false)}>
+                            <button type="button" className="rb-ghost rb-block" onClick={closeShoppingList}>
                                 Close
                             </button>
                         </div>

@@ -1,5 +1,6 @@
 import {NavLink, useNavigate} from 'react-router-dom'
 import './Navbar.css'
+import { WhiskIcon } from './icons'
 
 function Navbar(){
     const navigate = useNavigate()
@@ -10,7 +11,7 @@ function Navbar(){
     }
     return (
         <nav className="navbar">
-            <span className="navbar-brand">Whisk</span>
+            <span className="navbar-brand"><WhiskIcon size={22} />Whisk</span>
             <div className="navbar-links">
                 <NavLink to="/recipes">Recipes</NavLink>
                 <NavLink to="/add">Add recipe</NavLink>
