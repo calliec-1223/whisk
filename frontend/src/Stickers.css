@@ -106,13 +106,13 @@
   transform: rotate(-8deg);
 }
 
-.sticker-toast strong,
-.sticker-toast span {
+.sticker-toast-text strong,
+.sticker-toast-text span {
   display: block;
   line-height: 1.3;
 }
 
-.sticker-toast span {
+.sticker-toast-text span {
   color: var(--rb-crumb);
   font-weight: 700;
 }

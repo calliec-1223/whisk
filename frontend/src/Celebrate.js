@@ -31,7 +31,7 @@ export function CelebrateProvider({ children }) {
                 {current && (
                     <div className="sticker-toast" key={`${current}-${queue.length}`}>
                         <StickerArt stickerKey={current} size="small" />
-                        <div>
+                        <div className="sticker-toast-text">
                             <strong>New sticker!</strong>
                             <span>{STICKER_ART[current]?.name}</span>
                         </div>
