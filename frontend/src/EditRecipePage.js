@@ -32,6 +32,7 @@ function EditRecipePage() {
             saveLabel="Save changes"
             toastMessage="Changes saved!"
             initialRecipe={recipe}
+            doneTo={`/recipes/${recipe.id}`}
             save={(body) => authFetch(`/recipes/${recipe.id}`, { method: 'PUT', body })}
         />
     )

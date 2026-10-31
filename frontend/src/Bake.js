@@ -149,7 +149,7 @@ function Bake() {
                 <PageHeader
                     title="Let's bake!"
                     meta={recipe.title}
-                    action={!result && <Link to="/recipes" className="rb-button rb-ghost">Cancel</Link>}
+                    action={!result && <Link to={`/recipes/${recipe.id}`} className="rb-button rb-ghost">Cancel</Link>}
                 />
 
                 {phase === 'prep' && (
@@ -288,7 +288,7 @@ function Bake() {
                                 ? `That was your first time baking ${recipe.title}!`
                                 : `You've baked ${recipe.title} ${result.count} times.`}
                         </p>
-                        <Link to="/recipes" className="rb-button">Back to my recipe book</Link>
+                        <Link to={`/recipes/${recipe.id}`} className="rb-button">Back to my recipe box</Link>
                     </section>
                 )}
             </div>

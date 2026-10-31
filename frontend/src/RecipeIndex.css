@@ -1,0 +1,542 @@
+/* The recipe box on the recipes page: index cards standing in a box,
+   the front one readable, the ones behind showing their top edge.
+   Category colors (--cat) come from Recipes.css. */
+
+/* ---------- Desk: the box, and the pulled-out card beside it ---------- */
+
+.desk {
+  /* Fill the rest of the screen so the page itself doesn't scroll */
+  height: max(24rem, calc(100dvh - var(--desk-top, 15rem) - 1rem));
+  display: grid;
+  grid-template-columns: minmax(0, 25rem);
+  justify-content: center;
+  gap: 1.75rem;
+}
+
+.desk.open {
+  grid-template-columns: 25rem minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+.desk-box {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Category tabs only show their icon, except the one for the front card's section */
+.desk .box-tabs {
+  padding-inline: 1rem;
+  margin-bottom: -2px;
+  overflow: visible;
+}
+
+.desk .box-tab:not(.active) .box-tab-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.recipes-page .desk .box-tab {
+  min-width: 2.5rem;
+  padding: 0.375rem 0.55rem;
+}
+
+.recipes-page .desk .box-tab.active {
+  border-bottom-color: var(--rb-ink);
+}
+
+/* ---------- The box ---------- */
+
+.index-box {
+  --wall: 4.75rem;     /* height of the box's front panel */
+  --card-h: 11.5rem;
+  --sink: 2.25rem;     /* how much of the front card hides behind the panel */
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+}
+
+/* How far apart the cards behind sit, so five of them fit above the front card */
+.index-box {
+  --step: clamp(2.125rem, (100cqh - var(--wall) - var(--card-h) + var(--sink) - 2rem) / 4, 2.75rem);
+}
+
+/* Inside of the box, behind the cards */
+.index-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--wall) + var(--card-h) * 0.5);
+  background: #f6dcbc;
+  border: var(--rb-outline);
+  border-radius: 14px 14px 18px 18px;
+}
+
+.index-well {
+  position: absolute;
+  inset: 0;
+  perspective: 1000px;
+  touch-action: none;
+}
+
+.index-well:focus {
+  outline: none;
+}
+
+.index-well:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 3px solid var(--rb-jam);
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* ---------- Cards ---------- */
+
+.index-card {
+  position: absolute;
+  left: 0.875rem;
+  right: 0.875rem;
+  bottom: calc(var(--wall) - var(--sink));
+  z-index: var(--z);
+  height: var(--card-h);
+  background: color-mix(in srgb, var(--rb-paper), #f1e0cc calc(var(--k) * 14%));
+  border: var(--rb-outline);
+  border-radius: 10px;
+  box-shadow: 0 2px 0 rgba(79, 51, 40, 0.25);
+  transform-origin: 50% 100%;
+  transform: translateY(calc(var(--k) * var(--step) * -1)) scale(calc(1 - var(--k) * 0.02));
+  transition: transform 0.38s cubic-bezier(0.3, 0.9, 0.3, 1), opacity 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.index-card.front {
+  cursor: default;
+  box-shadow: 0 3px 0 var(--rb-ink);
+}
+
+/* A card behind lifts a little under the pointer, to show it can be picked */
+.index-card:not(.front):not(.flipped):hover {
+  transform: translateY(calc(var(--k) * var(--step) * -1 - 0.5rem)) scale(calc(1 - var(--k) * 0.02));
+}
+
+/* Cards already flipped past tip forward and drop behind the front panel */
+.index-card.flipped {
+  transform: translateY(35%) rotateX(-70deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.index-card.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A recipe brought back with Undo drops into place */
+.index-card.arriving {
+  animation: card-drop 0.45s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+
+@keyframes card-drop {
+  from { opacity: 0; translate: 0 -3rem; }
+}
+
+/* Header strip: the part that shows on the cards behind */
+.ic-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border-bottom: 2px solid #eba5a0;
+}
+
+.ic-head h3 {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ic-dot {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1.5px solid var(--rb-ink);
+  border-radius: 50%;
+  background: var(--cat);
+}
+
+/* Ruled lines under the header, like a real index card */
+.ic-lines {
+  padding: 0.25rem 0.875rem;
+  line-height: 2rem;
+  background-image: repeating-linear-gradient(
+    transparent 0 calc(2rem - 1.5px),
+    var(--rb-rule-blue) calc(2rem - 1.5px) 2rem
+  );
+  background-position: 0 0.25rem;
+}
+
+.ic-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.875rem;
+  color: var(--rb-crumb);
+  font-size: 0.875rem;
+}
+
+.ic-meta .chip {
+  line-height: 1.4;
+}
+
+.ic-baked {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.recipes-page .ic-shop {
+  position: relative;
+  z-index: 2; /* above the card-wide link */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--rb-crumb);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 2rem;
+  cursor: pointer;
+}
+
+.ic-out {
+  color: var(--rb-crumb);
+  font-weight: 700;
+}
+
+/* The pulled-out card leaves an empty slot behind */
+.index-card.pulled {
+  background: var(--rb-tin);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.index-card.pulled .ic-lines {
+  background-image: none;
+}
+
+.card-link {
+  color: var(--rb-ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* Stretch the link over the whole card so any part of it opens the recipe */
+.card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 8px;
+}
+
+.card-link:hover {
+  color: var(--rb-jam-dark);
+}
+
+.card-link:focus-visible {
+  outline: none;
+}
+
+.card-link:focus-visible::after {
+  outline: 3px solid var(--rb-jam);
+  outline-offset: 2px;
+}
+
+/* ---------- Divider cards: one per category, with a tab on top ---------- */
+
+.index-divider {
+  background: var(--cat);
+}
+
+.divider-tab {
+  position: absolute;
+  bottom: 100%;
+  /* Staggered like real dividers, and right of the titles on the cards in front */
+  left: min(calc(48% + var(--tab) * 5%), calc(100% - 7.5rem));
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  height: 1.875rem;
+  margin-bottom: -2px; /* covers the card's top outline under the tab */
+  padding: 0 0.75rem;
+  background: var(--cat);
+  border: var(--rb-outline);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.divider-face {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1.5rem;
+}
+
+.divider-face strong {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.divider-face span:not(.sticker) {
+  color: var(--rb-crumb);
+  font-weight: 700;
+}
+
+.index-card-empty {
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+
+.index-card-empty .empty-state {
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+/* ---------- Front panel of the box: flip buttons and shopping list ---------- */
+
+.index-wall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: var(--wall);
+  padding: 0 0.875rem;
+  background: var(--rb-tin);
+  border: var(--rb-outline);
+  border-radius: 6px 6px 18px 18px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+}
+
+.index-flip {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.recipes-page .flip-btn {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  background: var(--rb-paper);
+}
+
+.chev-up {
+  transform: rotate(180deg);
+}
+
+.index-count {
+  min-width: 4.75rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.index-shop {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.recipes-page .index-shop .rb-button {
+  min-height: 2.5rem;
+  padding: 0.375rem 0.875rem;
+}
+
+/* ---------- The pulled-out recipe ---------- */
+
+.pulled-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--rb-paper);
+  border: var(--rb-outline);
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--rb-ink);
+  animation: pull-out 0.45s cubic-bezier(0.25, 1.1, 0.4, 1);
+}
+
+/* It comes up out of the box, from the left */
+@keyframes pull-out {
+  from {
+    opacity: 0;
+    transform: translate(-4rem, 3rem) rotate(-4deg) scale(0.94);
+  }
+}
+
+.pulled-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.125rem 1rem 0.75rem 1.25rem;
+  border-bottom: 2px solid #eba5a0;
+  box-shadow: inset 0 8px 0 var(--cat);
+}
+
+.pulled-head .ic-dot {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.pulled-head h2 {
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(1.25rem, 1.1rem + 0.8vw, 1.625rem);
+}
+
+.recipes-page .put-back {
+  min-height: 2.5rem;
+  padding: 0.375rem 1rem;
+}
+
+.pulled-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1.25rem 4.5rem; /* bottom room for the chat button */
+}
+
+.pulled-body > .ic-meta {
+  margin-bottom: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+}
+
+/* ---------- Phones and narrow windows: the box shrinks to a strip above the recipe ---------- */
+
+@media (max-width: 40rem) {
+  /* The floating Assistant button is always there, so the link can go */
+  .recipes-page .ask-link {
+    display: none;
+  }
+
+  /* The box's front panel already counts the recipes */
+  .recipes-page .page-meta {
+    display: none;
+  }
+
+  .recipes-page .page-header {
+    align-items: center;
+  }
+
+  .recipes-page .header-actions .rb-ghost,
+  .recipes-page .header-actions .rb-button {
+    min-height: 2.5rem;
+    padding: 0.375rem 0.875rem;
+  }
+
+  /* Leave room at the bottom for the floating Timer and Assistant buttons */
+  .desk {
+    height: max(20rem, calc(100dvh - var(--desk-top, 15rem) - 4.25rem));
+  }
+
+  .desk .box-tabs {
+    gap: 0.125rem;
+    padding-inline: 0.5rem;
+  }
+
+  .recipes-page .desk .box-tab {
+    min-width: 0;
+    flex-shrink: 1;
+    padding: 0.375rem 0.4rem;
+  }
+
+  /* Room for three cards behind on a phone */
+  .index-card[data-depth="4"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .index-box {
+    --step: clamp(2.125rem, (100cqh - var(--wall) - var(--card-h) + var(--sink) - 2rem) / 3, 2.75rem);
+    --card-h: 10.5rem;
+    --wall: 4.25rem;
+    --sink: 1.75rem;
+  }
+}
+
+@media (max-width: 52rem) {
+  .desk,
+  .desk.open {
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .desk.open {
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .desk.open .desk-box {
+    height: 7.75rem;
+  }
+
+  .desk.open .box-tabs {
+    display: none;
+  }
+
+  .desk.open .index-box {
+    --wall: 3.5rem;
+    --card-h: 4.75rem;
+    --sink: 0.5rem;
+  }
+
+  .desk.open .index-box::before {
+    display: none;
+  }
+
+  .desk.open .index-card:not(.front) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .desk.open .ic-baked,
+  .desk.open .ic-shop {
+    display: none;
+  }
+
+  @keyframes pull-out {
+    from {
+      opacity: 0;
+      transform: translateY(-3rem) scale(0.96);
+    }
+  }
+}

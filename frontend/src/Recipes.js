@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authFetch } from './api'
-import RecipeList from './RecipeList'
-import { CATEGORIES } from './categories'
+import './Recipes.css'
+import RecipeIndex, { buildCards } from './RecipeIndex'
+import PulledRecipe from './PulledRecipe'
 import { useChat } from './ChatContext'
 import { BowlIcon, CategoryIcon, WheelIcon } from './icons'
 import PageHeader from './PageHeader'
@@ -11,20 +12,19 @@ import SpinnerModal from './Spinner'
 import { useCelebrate } from './Celebrate'
 import { play } from './sound'
 
-const PAGE_SIZE = 12
 const UNDO_MS = 6000
-const TABS = [{ value: '', label: 'All' }, ...CATEGORIES]
 
+// The recipe box: an index of cards on the left, and the card you pulled out beside it.
+// /recipes/:id opens that recipe's card.
 function Recipes() {
-    const [recipes, setRecipes] = useState([])
-    const location = useLocation()
+    const { id } = useParams()
     const navigate = useNavigate()
+    const [recipes, setRecipes] = useState([])
+    const [loaded, setLoaded] = useState(false)
     const { setIsOpen: setChatOpen } = useChat()
     const [search, setSearch] = useState('')
-    const [categoryFilter, setCategoryFilter] = useState('')
     const [selectedRecipes, setSelectedRecipes] = useState([])
     const [showShoppingList, setShowShoppingList] = useState(false)
-    const [page, setPage] = useState(1)
     // Ticked shopping-list items, keyed "recipeId-lineIndex"
     const [boughtItems, setBoughtItems] = useState({})
     // A deleted recipe waits here for UNDO_MS before the server delete is sent,
@@ -34,33 +34,74 @@ function Recipes() {
     const [notice, setNotice] = useState('')
     const clearNotice = useCallback(() => setNotice(''), [])
     const [showSpinner, setShowSpinner] = useState(false)
-    // A recipe brought back with Undo pops into the grid
-    const [arrivingId, setArrivingId] = useState(null)
+    // A recipe brought back with Undo pops into the box
+    const [arrivingKey, setArrivingKey] = useState(null)
     const celebrate = useCelebrate()
+    // The card at the front of the box, by key so it stays put while searching
+    const [currentKey, setCurrentKey] = useState(id || null)
 
-    const filteredRecipes = recipes.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase())
-    const matchesCategory = categoryFilter === '' || r.category === categoryFilter
-    return matchesSearch && matchesCategory
-})
-
-    const pageCount = Math.max(1, Math.ceil(filteredRecipes.length / PAGE_SIZE))
-    // Clamp so deleting the last recipe on a page doesn't leave an empty page
-    const currentPage = Math.min(page, pageCount)
-    const pagedRecipes = filteredRecipes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
-
-    const goToPage = (n) => {
-        setPage(n)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+    const filteredRecipes = recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()))
+    const cards = buildCards(filteredRecipes)
+    const found = cards.findIndex(c => c.key === currentKey)
+    const current = found === -1 ? 0 : found
+    const frontCat = cards[current]?.cat
+    const sections = cards.filter(c => c.divider)
+    const flipTo = (i) => {
+        if (cards[i]) setCurrentKey(cards[i].key)
+        play('pop')
     }
+
+    const openRecipe = id ? recipes.find(r => String(r.id) === id) : null
+
+    // Opening a recipe from a link or the browser's back button brings its card to the front
+    useEffect(() => {
+        if (id) setCurrentKey(id)
+    }, [id])
+
+    // An unknown recipe id goes back to the plain box
+    useEffect(() => {
+        if (loaded && id && !openRecipe && pendingRef.current?.recipe.id !== Number(id)) {
+            navigate('/recipes', { replace: true })
+        }
+    }, [loaded, id, openRecipe, navigate])
+
+    // The desk fills the rest of the screen, so the page itself doesn't scroll
+    const deskRef = useRef(null)
+    useLayoutEffect(() => {
+        const desk = deskRef.current
+        const measure = () => {
+            const top = desk.getBoundingClientRect().top + window.scrollY
+            desk.style.setProperty('--desk-top', `${top}px`)
+        }
+        measure()
+        window.addEventListener('resize', measure)
+        return () => window.removeEventListener('resize', measure)
+    }, [])
+
+    // When a card is pulled out, the box slides over to the side (and back when it's put away).
+    // The layout jumps straight to its new place; this animates from where the box was.
+    const boxRef = useRef(null)
+    const lastBoxLeft = useRef(null)
+    const isOpen = Boolean(openRecipe)
+    useLayoutEffect(() => {
+        const box = boxRef.current
+        const left = box.getBoundingClientRect().left
+        const prev = lastBoxLeft.current
+        lastBoxLeft.current = left
+        if (prev === null || Math.abs(prev - left) < 1 || !box.animate) return
+        box.animate(
+            [{ transform: `translateX(${prev - left}px)` }, { transform: 'none' }],
+            { duration: 420, easing: 'cubic-bezier(0.3, 0.9, 0.3, 1)' },
+        )
+    }, [isOpen])
 
     const toggleSelectRecipe = (recipe) => {
-    if (selectedRecipes.find(r => r.id === recipe.id)) {
-        setSelectedRecipes(selectedRecipes.filter(r => r.id !== recipe.id))
-    } else {
-        setSelectedRecipes([...selectedRecipes, recipe])
+        if (selectedRecipes.find(r => r.id === recipe.id)) {
+            setSelectedRecipes(selectedRecipes.filter(r => r.id !== recipe.id))
+        } else {
+            setSelectedRecipes([...selectedRecipes, recipe])
+        }
     }
-}
 
     const fetchRecipes = () => {
         authFetch('/recipes')
@@ -68,6 +109,7 @@ function Recipes() {
         .then(data => {
             const hiddenId = pendingRef.current?.recipe.id
             setRecipes(Array.isArray(data) ? data.filter(r => r.id !== hiddenId) : [])
+            setLoaded(true)
         })
     }
 
@@ -97,6 +139,10 @@ function Recipes() {
         const timer = setTimeout(commitDelete, UNDO_MS)
         pendingRef.current = { recipe, timer }
         setPendingDelete({ recipe })
+        // Keep the box open at the same spot instead of jumping back to the first card
+        const at = cards.findIndex(c => c.key === String(recipe.id))
+        const neighbor = cards[at + 1] && !cards[at + 1].divider ? cards[at + 1] : cards[at - 1]
+        if (neighbor) setCurrentKey(neighbor.key)
         setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id))
         setRecipes(prev => prev.filter(r => r.id !== recipe.id))
     }
@@ -108,18 +154,14 @@ function Recipes() {
         pendingRef.current = null
         setPendingDelete(null)
         setNotice('Recipe restored!')
-        setArrivingId(pending.recipe.id)
-        setTimeout(() => setArrivingId(null), 600)
+        const key = String(pending.recipe.id)
+        setCurrentKey(key)
+        setArrivingKey(key)
+        setTimeout(() => setArrivingKey(null), 600)
         fetchRecipes()
     }
 
     useEffect(() => {
-        // Coming back from a recipe page after "Yes, delete": start the delete here so Undo works
-        const deleted = location.state?.deleted
-        if (deleted) {
-            navigate(location.pathname, { replace: true, state: null }) // a refresh shouldn't delete again
-            deleteRecipe(deleted)
-        }
         fetchRecipes()
         // Leaving the page or closing the tab sends any waiting delete right away
         window.addEventListener('pagehide', commitDelete)
@@ -129,14 +171,6 @@ function Recipes() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-    const chooseCategory = (value) => {
-        setCategoryFilter(value)
-        setPage(1)
-    }
-
-    const emptyText = recipes.length === 0
-        ? "Your recipe book is empty. Let's add your first recipe!"
-        : 'No recipes match. Try a different search or tab!'
 
     const shoppingKeys = selectedRecipes.flatMap(r =>
         r.ingredients.split('\n').map((_, i) => `${r.id}-${i}`))
@@ -163,11 +197,26 @@ function Recipes() {
 
     const recipeWord = (n) => (n === 1 ? 'recipe' : 'recipes')
 
+    const emptyText = recipes.length === 0
+        ? <>Your recipe box is empty. <Link to="/add">Write your first recipe!</Link></>
+        : 'No cards match. Try a different search!'
+
+    const shoppingFooter = selectedRecipes.length > 0 && (
+        <div className="index-shop">
+            <button type="button" className="rb-button" onClick={() => setShowShoppingList(true)}>
+                Shopping list ({selectedRecipes.length})
+            </button>
+            <button type="button" className="rb-text-button" onClick={() => setSelectedRecipes([])}>
+                Clear
+            </button>
+        </div>
+    )
+
     return (
         <div className="page-enter recipes-page">
             <div className="recipes-container">
                 <PageHeader
-                    title="My recipe book"
+                    title="My recipe box"
                     meta={`${recipes.length} ${recipeWord(recipes.length)} collected`}
                     action={
                         <div className="header-actions">
@@ -188,81 +237,54 @@ function Recipes() {
                         placeholder="Search recipes"
                         aria-label="Search recipes"
                         value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                        onChange={(e) => setSearch(e.target.value)}
                     />
                     <button type="button" className="ask-link" onClick={() => setChatOpen(true)}>
                         Stuck on a bake? Ask the assistant!
                     </button>
                 </div>
 
-                <div className="recipe-box">
-                    <div className="box-tabs" role="group" aria-label="Filter by category">
-                        {TABS.map(c => (
-                            <button
-                                type="button"
-                                key={c.value || 'all'}
-                                data-cat={c.value || 'all'}
-                                className={`box-tab${categoryFilter === c.value ? ' active' : ''}`}
-                                aria-pressed={categoryFilter === c.value}
-                                onClick={() => chooseCategory(c.value)}
-                            >
-                                <CategoryIcon cat={c.value} />
-                                {c.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="box-body">
-                        {selectedRecipes.length > 0 && (
-                            <div className="shopping-bar">
-                                <span>
-                                    {selectedRecipes.length} {recipeWord(selectedRecipes.length)} picked
-                                </span>
-                                <button type="button" className="rb-text-button" onClick={() => setSelectedRecipes([])}>
-                                    Clear
-                                </button>
-                                <button type="button" className="rb-button" onClick={() => setShowShoppingList(true)}>
-                                    Make shopping list
-                                </button>
+                <div ref={deskRef} className={`desk${openRecipe ? ' open' : ''}`}>
+                    <div ref={boxRef} className="desk-box">
+                        {sections.length > 1 && (
+                            <div className="box-tabs" role="group" aria-label="Jump to a category">
+                                {sections.map(c => (
+                                    <button
+                                        type="button"
+                                        key={c.cat}
+                                        data-cat={c.cat}
+                                        className={`box-tab${frontCat === c.cat ? ' active' : ''}`}
+                                        aria-pressed={frontCat === c.cat}
+                                        title={c.label}
+                                        onClick={() => { setCurrentKey(c.key); play('pop') }}
+                                    >
+                                        <CategoryIcon cat={c.cat} size={18} />
+                                        <span className="box-tab-label">{c.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         )}
-
-                        {pagedRecipes.length === 0 ? (
-                            <div className="empty-state">
-                                <BowlIcon size={44} />
-                                <p>{emptyText}</p>
-                            </div>
-                        ) : (
-                            <RecipeList
-                                recipes={pagedRecipes}
-                                arrivingId={arrivingId}
-                                selectedRecipes={selectedRecipes}
-                                onToggleSelect={toggleSelectRecipe}
-                            />
-                        )}
-
-                        {pageCount > 1 && (
-                            <nav className="pagination" aria-label="Recipe pages">
-                                <button
-                                    type="button"
-                                    className="rb-ghost"
-                                    disabled={currentPage === 1}
-                                    onClick={() => goToPage(currentPage - 1)}
-                                >
-                                    Previous
-                                </button>
-                                <span className="pagination-status">Page {currentPage} of {pageCount}</span>
-                                <button
-                                    type="button"
-                                    className="rb-ghost"
-                                    disabled={currentPage === pageCount}
-                                    onClick={() => goToPage(currentPage + 1)}
-                                >
-                                    Next
-                                </button>
-                            </nav>
-                        )}
+                        <RecipeIndex
+                            cards={cards}
+                            current={current}
+                            onFlip={flipTo}
+                            openKey={id}
+                            arrivingKey={arrivingKey}
+                            selected={selectedRecipes}
+                            onToggleSelect={toggleSelectRecipe}
+                            footer={shoppingFooter}
+                            empty={<div className="empty-state"><BowlIcon size={40} /><p>{emptyText}</p></div>}
+                        />
                     </div>
+
+                    {openRecipe && (
+                        <PulledRecipe
+                            key={openRecipe.id}
+                            recipe={openRecipe}
+                            onClose={() => navigate('/recipes')}
+                            onDelete={(r) => { deleteRecipe(r); navigate('/recipes') }}
+                        />
+                    )}
                 </div>
 
                 {showSpinner && <SpinnerModal recipes={recipes} onClose={() => setShowSpinner(false)} />}

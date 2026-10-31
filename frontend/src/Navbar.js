@@ -7,8 +7,8 @@ import { play, setSoundsOn, soundsOn } from './sound'
 function Navbar(){
     const navigate = useNavigate()
     const { pathname } = useLocation()
-    // A single recipe, or baking one, still counts as being in the recipe book
-    const inRecipeBook = pathname.startsWith('/recipe/') || pathname.startsWith('/bake/')
+    // Baking a recipe still counts as being in the recipe box
+    const inRecipeBook = pathname.startsWith('/bake/')
     const [sounds, setSounds] = useState(soundsOn)
 
     const toggleSounds = () => {

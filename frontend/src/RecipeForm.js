@@ -10,7 +10,7 @@ const MAX_SERVINGS = 1000
 
 // Shared form for adding and editing a recipe.
 // `save(body)` sends the recipe and returns the fetch promise.
-function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
+function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, doneTo = '/recipes' }) {
     const [form, setForm] = useState({
         title: initialRecipe?.title || '',
         ingredients: initialRecipe ? initialRecipe.ingredients.split('\n') : [],
@@ -80,7 +80,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save }) {
             if (ok) {
                 setShowToast(true)
                 celebrate(data.new_stickers)
-                timerRef.current = setTimeout(() => navigate('/recipes'), 1500)
+                timerRef.current = setTimeout(() => navigate(doneTo), 1500)
             } else {
                 setError(data.error || 'Something went wrong. Please try again.')
                 setSaving(false)
