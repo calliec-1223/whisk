@@ -114,8 +114,14 @@ function RecipeList ({ recipes, onDelete, selectedRecipes, onToggleSelect, leavi
                                 </div>
                             ) : (
                             <div className="recipe-actions">
-                                <Link to={`/bake/${recipe.id}`} state={{ recipe }} className="rb-button">
-                                    Start baking
+                                <Link
+                                    to={`/bake/${recipe.id}`}
+                                    state={{ recipe, servings: Number(desiredServings[recipe.id]) || undefined }}
+                                    className="rb-button"
+                                >
+                                    {Number(desiredServings[recipe.id]) > 0 && Number(desiredServings[recipe.id]) !== recipe.servings
+                                        ? `Start baking for ${desiredServings[recipe.id]}`
+                                        : 'Start baking'}
                                 </Link>
                                 <input
                                     className="scale-input"

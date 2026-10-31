@@ -4,6 +4,7 @@ import { authFetch } from './api'
 import { useCelebrate } from './Celebrate'
 import { Medal, TimerIcon } from './icons'
 import PageHeader from './PageHeader'
+import { scaleIngredient } from './scale'
 import { play } from './sound'
 import { formatTime, useTimers } from './Timers'
 import './Bake.css'
@@ -27,6 +28,15 @@ const timerName = (minutes) => (minutes >= 60 && minutes % 60 === 0
     ? `${minutes / 60} hr`
     : minutes < 1 ? `${Math.round(minutes * 60)} sec` : `${minutes} min`)
 
+const MAX_SERVINGS = 1000
+
+// One ingredient line with its amount scaled; scaled amounts are bold
+function Ingredient({ line, factor }) {
+    const { amount, rest, scaled } = scaleIngredient(line, factor)
+    if (!amount) return <span>{line}</span>
+    return <span>{scaled ? <strong className="scaled-amount">{amount}</strong> : amount}{rest}</span>
+}
+
 const MEDAL_CHOICES = [
     { medal: 'bronze', label: "It's okay" },
     { medal: 'silver', label: 'Pretty good' },
@@ -46,9 +56,17 @@ function Bake() {
     const [stepIndex, setStepIndex] = useState(0)
     const [turnDirection, setTurnDirection] = useState('forward') // which way the page turns
     const [stepTimers, setStepTimers] = useState({}) // "step-minutes" -> timer id
+    // Servings to bake for. Starts from the card's "Scale to servings" box if it was used.
+    const [servingsInput, setServingsInput] = useState(location.state?.servings ? String(location.state.servings) : '')
     const [result, setResult] = useState(null)
     const [error, setError] = useState('')
     const [saving, setSaving] = useState(false)
+
+    // Fill in the recipe's own servings once it's loaded (unless the card passed a number)
+    useEffect(() => {
+        if (recipe && servingsInput === '') setServingsInput(String(recipe.servings))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [recipe])
 
     useEffect(() => {
         if (recipe) return
@@ -59,6 +77,12 @@ function Bake() {
     }, [id, recipe])
 
     const ingredients = recipe ? recipe.ingredients.split('\n').filter(Boolean) : []
+    const typedServings = Number(servingsInput)
+    const servings = recipe && Number.isInteger(typedServings) && typedServings >= 1 && typedServings <= MAX_SERVINGS
+        ? typedServings
+        : recipe?.servings
+    const factor = recipe ? servings / recipe.servings : 1
+    const changeServings = (delta) => setServingsInput(String(Math.min(MAX_SERVINGS, Math.max(1, servings + delta))))
     const steps = recipe ? recipe.steps.split('\n').filter(Boolean) : []
     const readyCount = ingredients.filter((_, i) => ready[i]).length
     const allReady = readyCount === ingredients.length
@@ -128,12 +152,34 @@ function Bake() {
                     <section className="bake-card" aria-labelledby="prep-title">
                         <h2 id="prep-title">Gather your ingredients</h2>
                         <p className="bake-hint">Tick each one off as you set it out.</p>
+
+                        <div className="servings-control">
+                            <label htmlFor="bake-servings">Baking for</label>
+                            <div className="servings-stepper">
+                                <button type="button" className="rb-ghost" aria-label="Fewer servings"
+                                        disabled={servings <= 1} onClick={() => changeServings(-1)}>−</button>
+                                <input
+                                    id="bake-servings"
+                                    type="number"
+                                    inputMode="numeric"
+                                    min="1"
+                                    max={MAX_SERVINGS}
+                                    value={servingsInput}
+                                    onChange={(e) => setServingsInput(e.target.value)}
+                                />
+                                <button type="button" className="rb-ghost" aria-label="More servings"
+                                        disabled={servings >= MAX_SERVINGS} onClick={() => changeServings(1)}>+</button>
+                            </div>
+                            <span className="servings-note">
+                                {factor === 1 ? 'servings' : `servings (recipe makes ${recipe.servings})`}
+                            </span>
+                        </div>
                         <ul className="prep-list tick-list">
                             {ingredients.map((ing, i) => (
                                 <li key={i}>
                                     <label>
                                         <input type="checkbox" checked={!!ready[i]} onChange={() => toggleReady(i)} />
-                                        <span>{ing}</span>
+                                        <Ingredient line={ing} factor={factor} />
                                     </label>
                                 </li>
                             ))}
@@ -188,6 +234,13 @@ function Bake() {
                         })}
 
                         </div>
+
+                        <details className="bake-ingredients">
+                            <summary>Ingredients for {servings} {servings === 1 ? 'serving' : 'servings'}</summary>
+                            <ul>
+                                {ingredients.map((ing, i) => <li key={i}><Ingredient line={ing} factor={factor} /></li>)}
+                            </ul>
+                        </details>
 
                         <div className="bake-nav">
                             <button type="button" className="rb-ghost" disabled={stepIndex === 0} onClick={prevStep}>
