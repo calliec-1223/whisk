@@ -108,10 +108,13 @@ with app.app_context():
         db.session.execute(text('ALTER TABLE "user" ALTER COLUMN email DROP NOT NULL'))
     # create_all doesn't add new columns to existing tables either, so add any
     # that are missing. Works on SQLite and Postgres; does nothing once added.
-    recipe_columns = {c['name'] for c in inspect(db.engine).get_columns('recipe')}
+    # Inspect through the session's own connection: the ALTER above holds a lock on
+    # "user" until commit, and a second connection would wait for it forever (Postgres)
+    inspector = inspect(db.session.connection())
+    recipe_columns = {c['name'] for c in inspector.get_columns('recipe')}
     if 'source_url' not in recipe_columns:
         db.session.execute(text('ALTER TABLE recipe ADD COLUMN source_url VARCHAR(500)'))
-    user_columns = {c['name'] for c in inspect(db.engine).get_columns('user')}
+    user_columns = {c['name'] for c in inspector.get_columns('user')}
     if 'display_name' not in user_columns:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN display_name VARCHAR(40)'))
     db.session.commit()
@@ -444,7 +447,8 @@ def view_shared(token):
     owner = db.session.get(User, recipe.user_id)
     d = recipe_to_dict(recipe)
     d.pop('id')
-    return jsonify({**d, 'shared_by': owner.display_name or owner.username})
+    shared_by = (owner.display_name or owner.username) if owner else 'a Whisk baker'
+    return jsonify({**d, 'shared_by': shared_by})
 
 
 @app.route('/shared/<token>/save', methods=['POST'])

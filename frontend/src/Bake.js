@@ -113,6 +113,12 @@ function Bake() {
         setReady({ ...ready, [i]: !ready[i] })
     }
 
+    // Tick every ingredient at once (or clear them all)
+    const setAllReady = (value) => {
+        if (value) play('pop')
+        setReady(value ? Object.fromEntries(ingredients.map((_, i) => [i, true])) : {})
+    }
+
     const startStepTimer = (minutes) => {
         const label = `Step ${stepIndex + 1}: ${steps[stepIndex]}`
         const timerId = addTimer(minutes, label)
@@ -177,6 +183,11 @@ function Bake() {
                             <span className="servings-note">
                                 {factor === 1 ? 'servings' : `servings (recipe makes ${recipe.servings})`}
                             </span>
+                        </div>
+                        <div className="check-all-row">
+                            <button type="button" className="rb-ghost check-all" onClick={() => setAllReady(!allReady)}>
+                                {allReady ? 'Uncheck all' : 'Check all'}
+                            </button>
                         </div>
                         <ul className="prep-list tick-list">
                             {ingredients.map((ing, i) => (
