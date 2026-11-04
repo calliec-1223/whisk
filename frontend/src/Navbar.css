@@ -19,6 +19,12 @@
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--rb-ink);
+  text-decoration: none;
+  border-radius: 999px;
+}
+
+.navbar-brand:hover {
+  color: var(--rb-jam-dark);
 }
 
 .navbar-links {

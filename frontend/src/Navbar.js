@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
 import { SoundIcon, WhiskIcon } from './icons'
 import { play, setSoundsOn, soundsOn } from './sound'
@@ -23,7 +23,10 @@ function Navbar(){
     }
     return (
         <nav className="navbar">
-            <span className="navbar-brand"><WhiskIcon size={22} />Whisk</span>
+            {/* The logo is the way home: back to the recipe box from any page */}
+            <Link to="/recipes" className="navbar-brand" aria-label="Whisk, go to my recipe box">
+                <WhiskIcon size={22} />Whisk
+            </Link>
             <div className="navbar-links">
                 <NavLink to="/recipes" className={({ isActive }) => (isActive || inRecipeBook ? 'active' : '')}>Recipes</NavLink>
                 <NavLink to="/add">Add recipe</NavLink>
