@@ -238,7 +238,6 @@ function Recipes() {
                                         key={c.cat}
                                         data-cat={c.cat}
                                         className={`box-tab${jumpTo?.cat === c.cat ? ' active' : ''}`}
-                                        title={c.label}
                                         onClick={() => setJumpTo({ cat: c.cat })}
                                     >
                                         <CategoryIcon cat={c.cat} size={18} />

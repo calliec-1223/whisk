@@ -23,32 +23,40 @@
   min-height: 0;
 }
 
-/* Category tabs: icons only (the dividers in the drawer show the names),
-   sharing the drawer's width so they never stick out past it */
+/* Category tabs: icon and name, wrapping onto a second row when they don't fit,
+   so they never stick out past the drawer */
 .desk .box-tabs {
+  flex-wrap: wrap;
   gap: 0.25rem;
   padding-inline: 0.75rem;
   margin-bottom: -2px;
   overflow: visible;
 }
 
-.desk .box-tab-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
 .recipes-page .desk .box-tab {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 3.25rem;
-  padding: 0.375rem 0;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
 }
 
+.recipes-page .desk .box-tab:hover {
+  min-height: 2.25rem;
+}
+
+/* With a card pulled out the drawer is narrower: names only, so the tabs fit in two rows */
+.desk.open .box-tab svg {
+  display: none;
+}
+
+.recipes-page .desk.open .box-tab {
+  padding-inline: 0.5rem;
+}
+
+/* The tab you jumped to stands out with a thicker edge */
 .recipes-page .desk .box-tab.active {
+  min-height: 2.25rem;
   border-bottom-color: var(--rb-ink);
+  box-shadow: inset 0 -3px 0 var(--rb-ink);
 }
 
 /* ---------- The drawer ---------- */
@@ -158,12 +166,12 @@
   transform: translateX(0.375rem);
 }
 
+/* Long titles wrap onto a second line instead of being cut off */
 .card-top .card-link {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding-block: 0.25rem;
+  line-height: 1.3;
 }
 
 .card-top-check {
