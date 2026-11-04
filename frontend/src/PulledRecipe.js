@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CategoryIcon, Medal, MEDAL_NAMES } from './icons'
 import { cardCategory, categoryLabel } from './RecipeIndex'
@@ -8,13 +8,20 @@ function PulledRecipe({ recipe, onClose, onDelete }) {
     const navigate = useNavigate()
     const [desiredServings, setDesiredServings] = useState('')
     const [confirming, setConfirming] = useState(false)
+    // Ignore clicks while the card slides in, so a double-click on the drawer
+    // doesn't land on Start baking
+    const [settled, setSettled] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setSettled(true), 450)
+        return () => clearTimeout(t)
+    }, [])
 
     const cat = cardCategory(recipe)
     const wanted = Number(desiredServings)
     const scaling = wanted > 0 && wanted !== recipe.servings
 
     return (
-        <article className="pulled-card" data-cat={cat} aria-labelledby="pulled-title">
+        <article className={`pulled-card${settled ? '' : ' settling'}`} data-cat={cat} aria-labelledby="pulled-title">
             <header className="pulled-head">
                 <span className="ic-dot" aria-hidden="true"><CategoryIcon cat={cat} size={20} /></span>
                 <h2 id="pulled-title">{recipe.title}</h2>

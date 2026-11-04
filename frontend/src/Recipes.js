@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authFetch } from './api'
 import './Recipes.css'
-import RecipeIndex, { buildCards } from './RecipeIndex'
+import RecipeIndex, { buildSections } from './RecipeIndex'
 import PulledRecipe from './PulledRecipe'
 import { useChat } from './ChatContext'
 import { BowlIcon, CategoryIcon, WheelIcon } from './icons'
@@ -14,7 +14,7 @@ import { play } from './sound'
 
 const UNDO_MS = 6000
 
-// The recipe box: an index of cards on the left, and the card you pulled out beside it.
+// The recipe box: a drawer of index cards on the left, and the card you pulled out beside it.
 // /recipes/:id opens that recipe's card.
 function Recipes() {
     const { id } = useParams()
@@ -35,28 +35,15 @@ function Recipes() {
     const clearNotice = useCallback(() => setNotice(''), [])
     const [showSpinner, setShowSpinner] = useState(false)
     // A recipe brought back with Undo pops into the box
-    const [arrivingKey, setArrivingKey] = useState(null)
+    const [arrivingId, setArrivingId] = useState(null)
     const celebrate = useCelebrate()
-    // The card at the front of the box, by key so it stays put while searching
-    const [currentKey, setCurrentKey] = useState(id || null)
+    // Last category tab clicked; a new object each time so clicking the same tab scrolls again
+    const [jumpTo, setJumpTo] = useState(null)
 
     const filteredRecipes = recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()))
-    const cards = buildCards(filteredRecipes)
-    const found = cards.findIndex(c => c.key === currentKey)
-    const current = found === -1 ? 0 : found
-    const frontCat = cards[current]?.cat
-    const sections = cards.filter(c => c.divider)
-    const flipTo = (i) => {
-        if (cards[i]) setCurrentKey(cards[i].key)
-        play('pop')
-    }
+    const sections = buildSections(filteredRecipes)
 
     const openRecipe = id ? recipes.find(r => String(r.id) === id) : null
-
-    // Opening a recipe from a link or the browser's back button brings its card to the front
-    useEffect(() => {
-        if (id) setCurrentKey(id)
-    }, [id])
 
     // An unknown recipe id goes back to the plain box
     useEffect(() => {
@@ -78,19 +65,22 @@ function Recipes() {
         return () => window.removeEventListener('resize', measure)
     }, [])
 
-    // When a card is pulled out, the box slides over to the side (and back when it's put away).
-    // The layout jumps straight to its new place; this animates from where the box was.
+    // When a card is pulled out, the drawer slides over to the side (and back when it's put away).
+    // The layout jumps straight to its new place; this animates from where the drawer was.
     const boxRef = useRef(null)
-    const lastBoxLeft = useRef(null)
+    const lastBox = useRef(null)
     const isOpen = Boolean(openRecipe)
     useLayoutEffect(() => {
         const box = boxRef.current
-        const left = box.getBoundingClientRect().left
-        const prev = lastBoxLeft.current
-        lastBoxLeft.current = left
-        if (prev === null || Math.abs(prev - left) < 1 || !box.animate) return
+        const { left, width } = box.getBoundingClientRect()
+        const prev = lastBox.current
+        lastBox.current = { left, width }
+        if (!prev || Math.abs(prev.left - left) < 1 || !box.animate) return
         box.animate(
-            [{ transform: `translateX(${prev - left}px)` }, { transform: 'none' }],
+            [
+                { transform: `translateX(${prev.left - left}px)`, width: `${prev.width}px` },
+                { transform: 'none', width: `${width}px` },
+            ],
             { duration: 420, easing: 'cubic-bezier(0.3, 0.9, 0.3, 1)' },
         )
     }, [isOpen])
@@ -139,10 +129,6 @@ function Recipes() {
         const timer = setTimeout(commitDelete, UNDO_MS)
         pendingRef.current = { recipe, timer }
         setPendingDelete({ recipe })
-        // Keep the box open at the same spot instead of jumping back to the first card
-        const at = cards.findIndex(c => c.key === String(recipe.id))
-        const neighbor = cards[at + 1] && !cards[at + 1].divider ? cards[at + 1] : cards[at - 1]
-        if (neighbor) setCurrentKey(neighbor.key)
         setSelectedRecipes(prev => prev.filter(r => r.id !== recipe.id))
         setRecipes(prev => prev.filter(r => r.id !== recipe.id))
     }
@@ -154,10 +140,8 @@ function Recipes() {
         pendingRef.current = null
         setPendingDelete(null)
         setNotice('Recipe restored!')
-        const key = String(pending.recipe.id)
-        setCurrentKey(key)
-        setArrivingKey(key)
-        setTimeout(() => setArrivingKey(null), 600)
+        setArrivingId(String(pending.recipe.id))
+        setTimeout(() => setArrivingId(null), 600)
         fetchRecipes()
     }
 
@@ -199,7 +183,7 @@ function Recipes() {
 
     const emptyText = recipes.length === 0
         ? <>Your recipe box is empty. <Link to="/add">Write your first recipe!</Link></>
-        : 'No cards match. Try a different search!'
+        : 'No recipes match. Try a different search!'
 
     const shoppingFooter = selectedRecipes.length > 0 && (
         <div className="index-shop">
@@ -253,10 +237,9 @@ function Recipes() {
                                         type="button"
                                         key={c.cat}
                                         data-cat={c.cat}
-                                        className={`box-tab${frontCat === c.cat ? ' active' : ''}`}
-                                        aria-pressed={frontCat === c.cat}
+                                        className={`box-tab${jumpTo?.cat === c.cat ? ' active' : ''}`}
                                         title={c.label}
-                                        onClick={() => { setCurrentKey(c.key); play('pop') }}
+                                        onClick={() => setJumpTo({ cat: c.cat })}
                                     >
                                         <CategoryIcon cat={c.cat} size={18} />
                                         <span className="box-tab-label">{c.label}</span>
@@ -265,11 +248,10 @@ function Recipes() {
                             </div>
                         )}
                         <RecipeIndex
-                            cards={cards}
-                            current={current}
-                            onFlip={flipTo}
-                            openKey={id}
-                            arrivingKey={arrivingKey}
+                            sections={sections}
+                            openId={id}
+                            arrivingId={arrivingId}
+                            jumpTo={jumpTo}
                             selected={selectedRecipes}
                             onToggleSelect={toggleSelectRecipe}
                             footer={shoppingFooter}
