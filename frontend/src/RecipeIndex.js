@@ -20,7 +20,7 @@ export function buildSections(recipes) {
 
 // An open drawer of index cards seen from above: each card shows its top strip,
 // grouped behind category dividers. Clicking a card pulls it out beside the drawer.
-function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleSelect, footer, empty }) {
+function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleSelect, onOpen, footer, empty }) {
     const scrollRef = useRef(null)
 
     // Keep the open card in view (for example after opening it from a link,
@@ -40,6 +40,14 @@ function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleS
         const top = section.offsetTop - (tab ? tab.offsetHeight : 0) - 8
         scrollRef.current.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     }, [jumpTo])
+
+    // A plain click opens the card with the slide animation; Cmd/Ctrl-click and
+    // middle-click still open a new tab like a normal link
+    const openCard = (e, to) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+        e.preventDefault()
+        onOpen(to)
+    }
 
     const renderSection = (s) => (
         <section key={s.cat} data-section={s.cat} data-cat={s.cat} aria-labelledby={`divider-${s.cat}`}>
@@ -71,6 +79,7 @@ function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleS
                             </span>
                             <Link
                                 to={isOpen ? '/recipes' : `/recipes/${recipe.id}`}
+                                onClick={(e) => openCard(e, isOpen ? '/recipes' : `/recipes/${recipe.id}`)}
                                 className="card-link"
                                 aria-current={isOpen ? 'true' : undefined}
                             >

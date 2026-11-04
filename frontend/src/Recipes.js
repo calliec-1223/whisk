@@ -65,25 +65,28 @@ function Recipes() {
         return () => window.removeEventListener('resize', measure)
     }, [])
 
-    // When a card is pulled out, the drawer slides over to the side (and back when it's put away).
-    // The layout jumps straight to its new place; this animates from where the drawer was.
-    const boxRef = useRef(null)
-    const lastBox = useRef(null)
-    const isOpen = Boolean(openRecipe)
+    // Pulling a card out or putting it back runs as a View Transition: the browser
+    // snapshots the page before and after and slides between them, which stays smooth
+    // because nothing has to re-lay out while it animates. The transition waits until
+    // React has drawn the new layout (the layout effect below), since the router
+    // renders route changes in the background.
+    const viewDone = useRef(null)
+    const goTo = (to) => {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!document.startViewTransition || reduceMotion) {
+            navigate(to)
+            return
+        }
+        document.startViewTransition(() => new Promise(resolve => {
+            viewDone.current = resolve
+            setTimeout(resolve, 500) // never hold the page frozen if the render is slow
+            navigate(to)
+        }))
+    }
     useLayoutEffect(() => {
-        const box = boxRef.current
-        const { left, width } = box.getBoundingClientRect()
-        const prev = lastBox.current
-        lastBox.current = { left, width }
-        if (!prev || (Math.abs(prev.left - left) < 1 && Math.abs(prev.width - width) < 1) || !box.animate) return
-        box.animate(
-            [
-                { transform: `translateX(${prev.left - left}px)`, width: `${prev.width}px` },
-                { transform: 'none', width: `${width}px` },
-            ],
-            { duration: 420, easing: 'cubic-bezier(0.3, 0.9, 0.3, 1)' },
-        )
-    }, [isOpen])
+        viewDone.current?.()
+        viewDone.current = null
+    }, [id])
 
     const toggleSelectRecipe = (recipe) => {
         if (selectedRecipes.find(r => r.id === recipe.id)) {
@@ -229,7 +232,7 @@ function Recipes() {
                 </div>
 
                 <div ref={deskRef} className={`desk${openRecipe ? ' open' : ''}`}>
-                    <div ref={boxRef} className="desk-box">
+                    <div className="desk-box">
                         {sections.length > 1 && (
                             <div className="box-tabs" role="group" aria-label="Jump to a category">
                                 {sections.map(c => (
@@ -253,6 +256,7 @@ function Recipes() {
                             jumpTo={jumpTo}
                             selected={selectedRecipes}
                             onToggleSelect={toggleSelectRecipe}
+                            onOpen={goTo}
                             footer={shoppingFooter}
                             empty={<div className="empty-state"><BowlIcon size={40} /><p>{emptyText}</p></div>}
                         />
@@ -262,8 +266,8 @@ function Recipes() {
                         <PulledRecipe
                             key={openRecipe.id}
                             recipe={openRecipe}
-                            onClose={() => navigate('/recipes')}
-                            onDelete={(r) => { deleteRecipe(r); navigate('/recipes') }}
+                            onClose={() => goTo('/recipes')}
+                            onDelete={(r) => { deleteRecipe(r); goTo('/recipes') }}
                         />
                     )}
                 </div>

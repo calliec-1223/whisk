@@ -17,6 +17,7 @@
 }
 
 .desk-box {
+  view-transition-name: recipe-drawer;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -66,7 +67,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #f6dcbc; /* inside of the box */
+  background: #dcb48c; /* inside of the box: warm wood, darker than any category color */
   border: var(--rb-outline);
   border-radius: 16px;
   box-shadow: 0 4px 0 var(--rb-ink);
@@ -265,6 +266,7 @@
 
 .drawer .empty-state {
   grid-column: 1 / -1;
+  color: var(--rb-ink); /* the muted brown is too faint on the wood */
   padding: 3rem 1rem;
 }
 
@@ -295,18 +297,61 @@
   border: var(--rb-outline);
   border-radius: 14px;
   box-shadow: 0 4px 0 var(--rb-ink);
-  animation: pull-out 0.45s cubic-bezier(0.25, 1.1, 0.4, 1);
+  view-transition-name: pulled-recipe;
 }
 
 .pulled-card.settling {
   pointer-events: none;
 }
 
-/* It comes up out of the box, from the left */
+/* ---------- Pull-out animation (a View Transition, started in Recipes.js) ---------- */
+
+::view-transition-group(recipe-drawer),
+::view-transition-group(pulled-recipe) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.3, 0.9, 0.3, 1);
+}
+
+/* The drawer's snapshots keep their real size and are trimmed by the moving edge,
+   instead of being squashed while it changes width */
+::view-transition-group(recipe-drawer) {
+  overflow: clip;
+}
+
+::view-transition-old(recipe-drawer),
+::view-transition-new(recipe-drawer) {
+  width: 100%;
+  height: 100%;
+  object-fit: none;
+  object-position: left top;
+}
+
+::view-transition-old(recipe-drawer) {
+  animation-duration: 0.2s;
+}
+
+/* The recipe card comes up out of the drawer, from the left */
+::view-transition-new(pulled-recipe):only-child {
+  animation: pull-out 0.45s cubic-bezier(0.25, 1.1, 0.4, 1);
+}
+
+/* and slides back toward it when put away */
+::view-transition-old(pulled-recipe):only-child {
+  animation: pull-out 0.3s ease-in reverse both;
+}
+
 @keyframes pull-out {
   from {
     opacity: 0;
-    transform: translate(-4rem, 3rem) rotate(-4deg) scale(0.94);
+    transform: translate(-4rem, 2rem) rotate(-3deg) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
