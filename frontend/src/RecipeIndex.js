@@ -125,7 +125,8 @@ function splitInTwo(sections) {
     let running = 0
     for (let i = 0; i <= sections.length; i++) {
         const gap = Math.abs(total / 2 - running)
-        if (gap < bestGap) {
+        // On a tie, keep more in the left column (so a single result sits on the left)
+        if (gap <= bestGap) {
             best = i
             bestGap = gap
         }
