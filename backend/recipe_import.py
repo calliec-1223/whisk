@@ -173,6 +173,9 @@ def _steps(instructions):
         if isinstance(item, str):
             steps.append(clean(item))
         elif isinstance(item, dict):
+            kind = item.get('@type')
+            if 'HowToTip' in (kind if isinstance(kind, list) else [kind]):
+                continue                       # tips sit among the steps on some sites; they aren't steps
             if 'itemListElement' in item:      # a HowToSection groups more steps
                 steps.extend(_steps(item['itemListElement']))
             elif item.get('text') or item.get('name'):

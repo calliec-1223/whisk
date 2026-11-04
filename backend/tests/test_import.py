@@ -71,6 +71,17 @@ def test_reads_steps_grouped_in_sections_and_plain_text():
     assert find_recipe(page_with(text))['steps'] == ['Cream butter.', 'Add flour.', 'Bake.']
 
 
+def test_tips_mixed_into_the_steps_are_left_out():
+    # King Arthur lists HowToTips after the HowToSteps
+    with_tips = {**COOKIE, 'recipeInstructions': [
+        {'@type': 'HowToStep', 'name': 'Step 1', 'text': 'Mix.'},
+        {'@type': 'HowToStep', 'name': 'Step 2', 'text': 'Bake.'},
+        {'@type': 'HowToTip', 'text': 'Use less water in summer.'},
+        {'@type': ['HowToTip'], 'text': 'Freeze for longer storage.'},
+    ]}
+    assert find_recipe(page_with(with_tips))['steps'] == ['Mix.', 'Bake.']
+
+
 @pytest.mark.parametrize('yield_value, servings', [
     (12, 12), ('8', 8), (['4 servings', '4'], 4), ('a lot', None), (None, None),
 ])

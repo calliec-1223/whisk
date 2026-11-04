@@ -1,8 +1,4 @@
-"""Share links (public read-only recipe pages) and baker ranks."""
-
-import pytest
-
-from app import rank_for
+"""Share links (public read-only recipe pages) and /me."""
 
 RECIPE = {'title': 'Scones', 'ingredients': '2 cups flour\n1 egg', 'steps': 'Mix\nBake',
           'notes': 'Warm is best', 'servings': 8, 'category': 'muffins'}
@@ -93,36 +89,10 @@ def test_saving_needs_login_and_a_live_link(client, auth_headers, other_headers)
     assert client.post(f'/shared/{token}/save', headers=other_headers).status_code == 404
 
 
-# ---------- Baker ranks ----------
+# ---------- Who's logged in ----------
 
-@pytest.mark.parametrize('bakes, rank, next_rank', [
-    (0, 'Kitchen Helper', 'Home Baker'),
-    (2, 'Kitchen Helper', 'Home Baker'),
-    (3, 'Home Baker', 'Pastry Chef'),
-    (10, 'Pastry Chef', 'Head Baker'),
-    (49, 'Head Baker', 'Master Baker'),
-    (50, 'Master Baker', None),
-    (500, 'Master Baker', None),
-])
-def test_rank_for(bakes, rank, next_rank):
-    result = rank_for(bakes)
-    assert result['rank'] == rank
-    assert result['next_rank'] == next_rank
-
-
-def test_me_shows_username_and_rank(client, auth_headers):
-    data = client.get('/me', headers=auth_headers).get_json()
-    assert data == {'username': 'alice', 'rank': 'Kitchen Helper', 'bakes': 0,
-                    'rank_floor': 0, 'next_rank': 'Home Baker', 'next_rank_at': 3}
-
-
-def test_bake_reports_a_rank_up(client, auth_headers):
-    recipe_id = make_recipe(client, auth_headers)
-    results = [client.post(f'/recipes/{recipe_id}/bakes', json={'medal': 'gold'}, headers=auth_headers).get_json()
-               for _ in range(3)]
-    assert [r['ranked_up'] for r in results] == [False, False, True]
-    assert results[-1]['rank']['rank'] == 'Home Baker'
-    assert client.get('/me', headers=auth_headers).get_json()['rank'] == 'Home Baker'
+def test_me_shows_username(client, auth_headers):
+    assert client.get('/me', headers=auth_headers).get_json() == {'username': 'alice'}
 
 
 def test_me_needs_login(client):

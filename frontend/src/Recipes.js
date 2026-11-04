@@ -148,7 +148,7 @@ function Recipes() {
         fetchRecipes()
     }
 
-    // Who's logged in, for the box's name and the baker rank
+    // Who's logged in, for the box's name
     const [me, setMe] = useState(null)
     useEffect(() => {
         authFetch('/me')
@@ -213,10 +213,7 @@ function Recipes() {
             <div className="recipes-container">
                 <PageHeader
                     title={me ? `${me.username}'s recipe box` : 'My recipe box'}
-                    meta={<>
-                        {recipes.length} {recipeWord(recipes.length)} collected
-                        {me && <BakerRank me={me} />}
-                    </>}
+                    meta={`${recipes.length} ${recipeWord(recipes.length)} collected`}
                     action={
                         <div className="header-actions">
                             {recipes.length > 0 && (
@@ -332,27 +329,6 @@ function Recipes() {
                 )}
             </div>
         </div>
-    )
-}
-
-// The baker's title, with a bar filling up toward the next one
-function BakerRank({ me }) {
-    const toGo = me.next_rank_at - me.bakes
-    const filled = me.next_rank ? (me.bakes - me.rank_floor) / (me.next_rank_at - me.rank_floor) : 1
-    return (
-        <span className="baker-rank">
-            <span className="rank-name">{me.rank}</span>
-            {me.next_rank && (
-                <>
-                    <span className="rank-bar" aria-hidden="true">
-                        <span style={{ width: `${Math.round(filled * 100)}%` }} />
-                    </span>
-                    <span className="rank-next">
-                        {toGo} more {toGo === 1 ? 'bake' : 'bakes'} to {me.next_rank}
-                    </span>
-                </>
-            )}
-        </span>
     )
 }
 

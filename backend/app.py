@@ -206,23 +206,6 @@ def as_utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-# Baker ranks: (bakes needed, title)
-RANKS = [(0, 'Kitchen Helper'), (3, 'Home Baker'), (10, 'Pastry Chef'), (25, 'Head Baker'), (50, 'Master Baker')]
-
-
-def rank_for(bake_count):
-    """The user's rank and how far they are from the next one."""
-    current = max(i for i, (needed, _) in enumerate(RANKS) if bake_count >= needed)
-    nxt = RANKS[current + 1] if current + 1 < len(RANKS) else None
-    return {
-        'rank': RANKS[current][1],
-        'bakes': bake_count,
-        'rank_floor': RANKS[current][0],
-        'next_rank': nxt[1] if nxt else None,
-        'next_rank_at': nxt[0] if nxt else None,
-    }
-
-
 def bake_stats(user_id):
     """{recipe_id: {'bake_count': n, 'best_medal': 'gold' | ...}} for the user's recipes."""
     stats = {}
@@ -314,14 +297,11 @@ def add_bake(id):
     medal = (request.get_json(silent=True) or {}).get('medal')
     if medal not in MEDALS:
         return jsonify({'error': 'Medal must be bronze, silver or gold'}), 400
-    rank_before = rank_for(Bake.query.filter_by(user_id=user_id).count())['rank']
     db.session.add(Bake(user_id=user_id, recipe_id=recipe.id, category=recipe.category, medal=medal))
     db.session.commit()
     new_stickers = award_stickers(user_id)
     stats = bake_stats(user_id).get(recipe.id)
-    rank = rank_for(Bake.query.filter_by(user_id=user_id).count())
-    return jsonify({**stats, 'new_stickers': new_stickers,
-                    'rank': rank, 'ranked_up': rank['rank'] != rank_before}), 201
+    return jsonify({**stats, 'new_stickers': new_stickers}), 201
 
 @app.route('/stickers', methods=['GET'])
 @jwt_required()
@@ -347,12 +327,12 @@ def claim_sticker():
 @app.route('/me', methods=['GET'])
 @jwt_required()
 def me():
-    """Who's logged in, and their baker rank."""
+    """Who's logged in (the recipe box is titled with their name)."""
     user_id = get_jwt_identity()
     user = db.session.get(User, int(user_id))
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    return jsonify({'username': user.username, **rank_for(Bake.query.filter_by(user_id=user_id).count())})
+    return jsonify({'username': user.username})
 
 
 # ---------- Importing a recipe from a website ----------
