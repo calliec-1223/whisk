@@ -7,8 +7,7 @@
   /* Fill the rest of the screen so the page itself doesn't scroll */
   height: max(24rem, calc(100dvh - var(--desk-top, 15rem) - 1rem));
   display: grid;
-  grid-template-columns: minmax(0, 30rem);
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.75rem;
 }
 
@@ -81,6 +80,15 @@
   overscroll-behavior: contain;
   padding: 0.25rem 0.75rem 1rem;
   scrollbar-width: thin;
+  /* With nothing pulled out the drawer is wide, so the sections sit in two columns */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0 1.5rem;
+}
+
+.desk.open .drawer-scroll {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* Divider card: category color, with its tab sticking up */
@@ -256,6 +264,7 @@
 }
 
 .drawer .empty-state {
+  grid-column: 1 / -1;
   padding: 3rem 1rem;
 }
 
@@ -384,6 +393,10 @@
   .desk.open {
     grid-template-columns: minmax(0, 1fr);
     justify-content: stretch;
+  }
+
+  .drawer-scroll {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .desk.open {

@@ -41,65 +41,88 @@ function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleS
         scrollRef.current.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     }, [jumpTo])
 
+    const renderSection = (s) => (
+        <section key={s.cat} data-section={s.cat} data-cat={s.cat} aria-labelledby={`divider-${s.cat}`}>
+            <h2 id={`divider-${s.cat}`} className="drawer-divider">
+                <span className="divider-tab" style={{ '--tab': CATEGORIES.findIndex(c => c.value === s.cat) }}>
+                    <CategoryIcon cat={s.cat} size={15} />
+                    {s.label}
+                </span>
+                <span className="divider-count">
+                    {s.recipes.length} {s.recipes.length === 1 ? 'recipe' : 'recipes'}
+                </span>
+            </h2>
+            <ul className="drawer-cards">
+                {s.recipes.map(recipe => {
+                    const isOpen = String(recipe.id) === openId
+                    const classes = ['card-top', isOpen ? 'pulled' : '', String(recipe.id) === arrivingId ? 'arriving' : '']
+                    return (
+                        <li key={recipe.id} data-id={recipe.id} className={classes.filter(Boolean).join(' ')}>
+                            <input
+                                type="checkbox"
+                                className="card-top-check"
+                                aria-label={`Add ${recipe.title} to shopping list`}
+                                title="Add to shopping list"
+                                checked={selected.some(r => r.id === recipe.id)}
+                                onChange={() => onToggleSelect(recipe)}
+                            />
+                            <span className="ic-dot" aria-hidden="true">
+                                <CategoryIcon cat={s.cat} size={15} />
+                            </span>
+                            <Link
+                                to={isOpen ? '/recipes' : `/recipes/${recipe.id}`}
+                                className="card-link"
+                                aria-current={isOpen ? 'true' : undefined}
+                            >
+                                {recipe.title}
+                                {isOpen && <span className="visually-hidden"> (open, select to put it back)</span>}
+                            </Link>
+                            <span className="card-top-meta">Serves {recipe.servings}</span>
+                            {recipe.bake_count > 0 && (
+                                <span className="card-top-medal">
+                                    <Medal medal={recipe.best_medal} size={22} />
+                                    <span className="visually-hidden">
+                                        Best result: {MEDAL_NAMES[recipe.best_medal]}. Baked {recipe.bake_count} {recipe.bake_count === 1 ? 'time' : 'times'}.
+                                    </span>
+                                </span>
+                            )}
+                        </li>
+                    )
+                })}
+            </ul>
+        </section>
+    )
+
     return (
         <div className="drawer">
             <div ref={scrollRef} className="drawer-scroll">
                 {sections.length === 0 && empty}
-                {sections.map(s => (
-                    <section key={s.cat} data-section={s.cat} data-cat={s.cat} aria-labelledby={`divider-${s.cat}`}>
-                        <h2 id={`divider-${s.cat}`} className="drawer-divider">
-                            <span className="divider-tab" style={{ '--tab': CATEGORIES.findIndex(c => c.value === s.cat) }}>
-                                <CategoryIcon cat={s.cat} size={15} />
-                                {s.label}
-                            </span>
-                            <span className="divider-count">
-                                {s.recipes.length} {s.recipes.length === 1 ? 'recipe' : 'recipes'}
-                            </span>
-                        </h2>
-                        <ul className="drawer-cards">
-                            {s.recipes.map(recipe => {
-                                const isOpen = String(recipe.id) === openId
-                                const classes = ['card-top', isOpen ? 'pulled' : '', String(recipe.id) === arrivingId ? 'arriving' : '']
-                                return (
-                                    <li key={recipe.id} data-id={recipe.id} className={classes.filter(Boolean).join(' ')}>
-                                        <input
-                                            type="checkbox"
-                                            className="card-top-check"
-                                            aria-label={`Add ${recipe.title} to shopping list`}
-                                            title="Add to shopping list"
-                                            checked={selected.some(r => r.id === recipe.id)}
-                                            onChange={() => onToggleSelect(recipe)}
-                                        />
-                                        <span className="ic-dot" aria-hidden="true">
-                                            <CategoryIcon cat={s.cat} size={15} />
-                                        </span>
-                                        <Link
-                                            to={isOpen ? '/recipes' : `/recipes/${recipe.id}`}
-                                            className="card-link"
-                                            aria-current={isOpen ? 'true' : undefined}
-                                        >
-                                            {recipe.title}
-                                            {isOpen && <span className="visually-hidden"> (open, select to put it back)</span>}
-                                        </Link>
-                                        <span className="card-top-meta">Serves {recipe.servings}</span>
-                                        {recipe.bake_count > 0 && (
-                                            <span className="card-top-medal">
-                                                <Medal medal={recipe.best_medal} size={22} />
-                                                <span className="visually-hidden">
-                                                    Best result: {MEDAL_NAMES[recipe.best_medal]}. Baked {recipe.bake_count} {recipe.bake_count === 1 ? 'time' : 'times'}.
-                                                </span>
-                                            </span>
-                                        )}
-                                    </li>
-                                )
-                            })}
-                        </ul>
-                    </section>
+                {splitInTwo(sections).map((column, i) => (
+                    <div key={i} className="drawer-column">{column.map(renderSection)}</div>
                 ))}
             </div>
             {footer}
         </div>
     )
+}
+
+// Split the sections into two columns of about the same height, keeping their order,
+// so stacking the columns (when the drawer is narrow) reads the same as one list
+function splitInTwo(sections) {
+    const size = (s) => s.recipes.length + 2 // a divider takes about two rows
+    const total = sections.reduce((sum, s) => sum + size(s), 0)
+    let best = 0
+    let bestGap = Infinity
+    let running = 0
+    for (let i = 0; i <= sections.length; i++) {
+        const gap = Math.abs(total / 2 - running)
+        if (gap < bestGap) {
+            best = i
+            bestGap = gap
+        }
+        if (i < sections.length) running += size(sections[i])
+    }
+    return [sections.slice(0, best), sections.slice(best)]
 }
 
 // Scroll the drawer (not the page) just enough to show a row

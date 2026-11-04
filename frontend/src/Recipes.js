@@ -75,7 +75,7 @@ function Recipes() {
         const { left, width } = box.getBoundingClientRect()
         const prev = lastBox.current
         lastBox.current = { left, width }
-        if (!prev || Math.abs(prev.left - left) < 1 || !box.animate) return
+        if (!prev || (Math.abs(prev.left - left) < 1 && Math.abs(prev.width - width) < 1) || !box.animate) return
         box.animate(
             [
                 { transform: `translateX(${prev.left - left}px)`, width: `${prev.width}px` },
