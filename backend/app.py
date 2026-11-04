@@ -65,6 +65,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique = True, nullable = False)
     email = db.Column(db.String(120), unique = True, nullable = True)  # optional; NULL when not given
     password = db.Column(db.String(200), nullable = False)
+    display_name = db.Column(db.String(40), nullable=True)  # optional; the username is used when blank
 
 
 class Bake(db.Model):
@@ -110,6 +111,9 @@ with app.app_context():
     recipe_columns = {c['name'] for c in inspect(db.engine).get_columns('recipe')}
     if 'source_url' not in recipe_columns:
         db.session.execute(text('ALTER TABLE recipe ADD COLUMN source_url VARCHAR(500)'))
+    user_columns = {c['name'] for c in inspect(db.engine).get_columns('user')}
+    if 'display_name' not in user_columns:
+        db.session.execute(text('ALTER TABLE "user" ADD COLUMN display_name VARCHAR(40)'))
     db.session.commit()
 
 RECIPE_REQUIRED_FIELDS = ('title', 'ingredients', 'steps', 'servings')
@@ -328,11 +332,30 @@ def claim_sticker():
 @jwt_required()
 def me():
     """Who's logged in (the recipe box is titled with their name)."""
-    user_id = get_jwt_identity()
-    user = db.session.get(User, int(user_id))
+    user = db.session.get(User, int(get_jwt_identity()))
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    return jsonify({'username': user.username})
+    return jsonify(me_to_dict(user))
+
+
+def me_to_dict(user):
+    return {'username': user.username, 'display_name': user.display_name,
+            'name': user.display_name or user.username}
+
+
+@app.route('/me', methods=['PUT'])
+@jwt_required()
+def update_me():
+    """Change the name shown on the recipe box. Blank goes back to the username."""
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    display_name, error = parse_display_name((request.get_json(silent=True) or {}).get('display_name', ''))
+    if error:
+        return jsonify({'error': error}), 400
+    user.display_name = display_name
+    db.session.commit()
+    return jsonify(me_to_dict(user))
 
 
 # ---------- Importing a recipe from a website ----------
@@ -421,7 +444,7 @@ def view_shared(token):
     owner = db.session.get(User, recipe.user_id)
     d = recipe_to_dict(recipe)
     d.pop('id')
-    return jsonify({**d, 'shared_by': owner.username})
+    return jsonify({**d, 'shared_by': owner.display_name or owner.username})
 
 
 @app.route('/shared/<token>/save', methods=['POST'])
@@ -535,6 +558,21 @@ def chat_result(job_id):
     return jsonify({'status': 'pending'})  # waiting, running, or retrying
 
 
+MAX_DISPLAY_NAME = 40
+
+
+def parse_display_name(value):
+    """(name or None, error or None). Blank means "use my username"."""
+    if value is None:
+        return None, None
+    if not isinstance(value, str):
+        return None, 'Name must be text'
+    value = ' '.join(value.split())  # trim and collapse spaces
+    if len(value) > MAX_DISPLAY_NAME:
+        return None, f'Name must be {MAX_DISPLAY_NAME} characters or fewer'
+    return value or None, None
+
+
 @app.route ('/signup', methods = ['POST'])
 @limiter.limit("10 per hour")
 def signup():
@@ -552,6 +590,10 @@ def signup():
     if email is not None and ('@' not in email or len(email) > 120):
         return jsonify({'error': 'Please enter a valid email or leave it blank'}), 400
 
+    display_name, error = parse_display_name(data.get('display_name'))
+    if error:
+        return jsonify({'error': error}), 400
+
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'error': 'Username already exists'}), 400
 
@@ -563,7 +605,8 @@ def signup():
     user = User(
         username = data['username'],
         email = email,
-        password = hashed_password
+        password = hashed_password,
+        display_name = display_name,
     )     
     db.session.add(user)
     db.session.commit() 

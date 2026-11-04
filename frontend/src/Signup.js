@@ -7,6 +7,7 @@ import AuthBook from './AuthBook'
 function Signup() {
     const [form, setForm] = useState({
         username: '',
+        display_name: '',
         password: '',
         email: '',
     })
@@ -46,6 +47,16 @@ function Signup() {
                 name="username"
                 autoComplete="username"
                 value={form.username}
+                onChange={handleChange}
+            />
+            <label htmlFor="signup-name">What should we call you? (optional)</label>
+            <input
+                id="signup-name"
+                name="display_name"
+                autoComplete="nickname"
+                maxLength={40}
+                placeholder="Your username, if left blank"
+                value={form.display_name}
                 onChange={handleChange}
             />
             <label htmlFor="signup-email">Email (optional)</label>

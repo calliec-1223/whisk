@@ -212,8 +212,11 @@ function Recipes() {
         <div className="page-enter recipes-page">
             <div className="recipes-container">
                 <PageHeader
-                    title={me ? `${me.username}'s recipe box` : 'My recipe box'}
-                    meta={`${recipes.length} ${recipeWord(recipes.length)} collected`}
+                    title={me ? `${me.name}'s recipe box` : 'My recipe box'}
+                    meta={<>
+                        {recipes.length} {recipeWord(recipes.length)} collected
+                        {me && <NameEditor me={me} onSaved={setMe} />}
+                    </>}
                     action={
                         <div className="header-actions">
                             {recipes.length > 0 && (
@@ -329,6 +332,56 @@ function Recipes() {
                 )}
             </div>
         </div>
+    )
+}
+
+// "Change name" next to the box's title: edit the name in place
+function NameEditor({ me, onSaved }) {
+    const [editing, setEditing] = useState(false)
+    const [draft, setDraft] = useState('')
+    const [error, setError] = useState('')
+    const [saving, setSaving] = useState(false)
+
+    const start = () => {
+        setDraft(me.display_name || '')
+        setError('')
+        setEditing(true)
+    }
+    const save = () => {
+        setSaving(true)
+        authFetch('/me', { method: 'PUT', body: JSON.stringify({ display_name: draft }) })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.error)
+                onSaved(data)
+                setEditing(false)
+            })
+            .catch(err => setError(err instanceof TypeError || !err.message
+                ? "Can't reach the server. Please try again." : err.message))
+            .finally(() => setSaving(false))
+    }
+
+    if (!editing) {
+        return <button type="button" className="rb-text-button change-name" onClick={start}>Change name</button>
+    }
+    return (
+        <span className="name-editor">
+            <input
+                aria-label="Name for your recipe box"
+                maxLength={40}
+                placeholder={me.username}
+                value={draft}
+                autoFocus
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') save()
+                    if (e.key === 'Escape') setEditing(false)
+                }}
+            />
+            <button type="button" onClick={save} disabled={saving}>Save</button>
+            <button type="button" className="rb-text-button" onClick={() => setEditing(false)}>Cancel</button>
+            {error && <span className="form-error" role="alert">{error}</span>}
+        </span>
     )
 }
 

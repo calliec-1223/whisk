@@ -91,8 +91,35 @@ def test_saving_needs_login_and_a_live_link(client, auth_headers, other_headers)
 
 # ---------- Who's logged in ----------
 
-def test_me_shows_username(client, auth_headers):
-    assert client.get('/me', headers=auth_headers).get_json() == {'username': 'alice'}
+def test_me_uses_the_username_when_no_name_is_set(client, auth_headers):
+    assert client.get('/me', headers=auth_headers).get_json() == {
+        'username': 'alice', 'display_name': None, 'name': 'alice'}
+
+
+def test_name_given_at_signup(client):
+    client.post('/signup', json={'username': 'cq99', 'password': 'pw123456', 'display_name': '  Callie  '})
+    token = client.post('/login', json={'username': 'cq99', 'password': 'pw123456'}).get_json()['token']
+    me = client.get('/me', headers={'Authorization': f'Bearer {token}'}).get_json()
+    assert me['name'] == 'Callie'  # trimmed
+
+
+def test_signup_name_is_checked(client):
+    resp = client.post('/signup', json={'username': 'x', 'password': 'pw123456', 'display_name': 'a' * 41})
+    assert resp.status_code == 400
+    resp = client.post('/signup', json={'username': 'y', 'password': 'pw123456', 'display_name': 7})
+    assert resp.status_code == 400
+
+
+def test_changing_the_name_later(client, auth_headers):
+    resp = client.put('/me', json={'display_name': 'Ali   B'}, headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.get_json()['name'] == 'Ali B'
+    assert client.get('/me', headers=auth_headers).get_json()['display_name'] == 'Ali B'
+
+    # Blank goes back to the username
+    assert client.put('/me', json={'display_name': '   '}, headers=auth_headers).get_json()['name'] == 'alice'
+    assert client.put('/me', json={'display_name': 'a' * 41}, headers=auth_headers).status_code == 400
+    assert client.put('/me', json={'display_name': 'x'}).status_code == 401
 
 
 def test_me_needs_login(client):
