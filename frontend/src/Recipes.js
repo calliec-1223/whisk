@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { authFetch } from './api'
 import './Recipes.css'
-import RecipeIndex, { buildSections } from './RecipeIndex'
+import RecipeIndex, { buildSections, cardCategory } from './RecipeIndex'
 import PulledRecipe from './PulledRecipe'
 import { useChat } from './ChatContext'
 import { BowlIcon, CategoryIcon, WheelIcon } from './icons'
@@ -37,10 +37,15 @@ function Recipes() {
     // A recipe brought back with Undo pops into the box
     const [arrivingId, setArrivingId] = useState(null)
     const celebrate = useCelebrate()
-    // Last category tab clicked; a new object each time so clicking the same tab scrolls again
-    const [jumpTo, setJumpTo] = useState(null)
+    // Category tab: '' shows every category
+    const [categoryFilter, setCategoryFilter] = useState('')
 
-    const filteredRecipes = recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()))
+    // The tabs come from all recipes, not just the search results, so the tab row
+    // (and the box's size) stays the same while searching
+    const tabs = buildSections(recipes)
+    const filteredRecipes = recipes.filter(r =>
+        r.title.toLowerCase().includes(search.toLowerCase())
+        && (categoryFilter === '' || cardCategory(r) === categoryFilter))
     const sections = buildSections(filteredRecipes)
 
     const openRecipe = id ? recipes.find(r => String(r.id) === id) : null
@@ -195,7 +200,7 @@ function Recipes() {
 
     const emptyText = recipes.length === 0
         ? <>Your recipe box is empty. <Link to="/add">Write your first recipe!</Link></>
-        : 'No recipes match. Try a different search!'
+        : 'No recipes match. Try a different search or tab!'
 
     const shoppingFooter = selectedRecipes.length > 0 && (
         <div className="index-shop">
@@ -245,17 +250,18 @@ function Recipes() {
 
                 <div ref={deskRef} className={`desk${openRecipe ? ' open' : ''}`}>
                     <div className="desk-box">
-                        {sections.length > 1 && (
-                            <div className="box-tabs" role="group" aria-label="Jump to a category">
-                                {sections.map(c => (
+                        {tabs.length > 0 && (
+                            <div className="box-tabs" role="group" aria-label="Filter by category">
+                                {[{ cat: '', label: 'All' }, ...tabs].map(c => (
                                     <button
                                         type="button"
-                                        key={c.cat}
-                                        data-cat={c.cat}
-                                        className={`box-tab${jumpTo?.cat === c.cat ? ' active' : ''}`}
-                                        onClick={() => setJumpTo({ cat: c.cat })}
+                                        key={c.cat || 'all'}
+                                        data-cat={c.cat || 'all'}
+                                        className={`box-tab${categoryFilter === c.cat ? ' active' : ''}`}
+                                        aria-pressed={categoryFilter === c.cat}
+                                        onClick={() => setCategoryFilter(c.cat)}
                                     >
-                                        <CategoryIcon cat={c.cat} size={18} />
+                                        {c.cat && <CategoryIcon cat={c.cat} size={18} />}
                                         <span className="box-tab-label">{c.label}</span>
                                     </button>
                                 ))}
@@ -265,7 +271,7 @@ function Recipes() {
                             sections={sections}
                             openId={id}
                             arrivingId={arrivingId}
-                            jumpTo={jumpTo}
+                            filterKey={categoryFilter}
                             selected={selectedRecipes}
                             onToggleSelect={toggleSelectRecipe}
                             onOpen={goTo}

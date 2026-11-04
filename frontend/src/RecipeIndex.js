@@ -20,7 +20,7 @@ export function buildSections(recipes) {
 
 // An open drawer of index cards seen from above: each card shows its top strip,
 // grouped behind category dividers. Clicking a card pulls it out beside the drawer.
-function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleSelect, onOpen, footer, empty }) {
+function RecipeIndex({ sections, openId, arrivingId, filterKey, selected, onToggleSelect, onOpen, footer, empty }) {
     const scrollRef = useRef(null)
 
     // Keep the open card in view (for example after opening it from a link,
@@ -31,15 +31,10 @@ function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleS
         if (row) scrollIntoDrawer(scrollRef.current, row)
     }, [openId, loaded])
 
-    // A category tab scrolls its section to the top of the drawer
+    // A different category starts at the top of the drawer
     useEffect(() => {
-        const section = jumpTo && scrollRef.current?.querySelector(`[data-section="${jumpTo.cat}"]`)
-        if (!section) return
-        // The divider's tab sticks up above the section, so leave room to show it
-        const tab = section.querySelector('.divider-tab')
-        const top = section.offsetTop - (tab ? tab.offsetHeight : 0) - 8
-        scrollRef.current.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
-    }, [jumpTo])
+        if (scrollRef.current) scrollRef.current.scrollTop = 0
+    }, [filterKey])
 
     // A plain click opens the card with the slide animation; Cmd/Ctrl-click and
     // middle-click still open a new tab like a normal link
