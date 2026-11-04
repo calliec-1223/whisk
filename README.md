@@ -1,6 +1,6 @@
 # Whisk
 
-A full-stack baking app. Save and organize recipes, convert baking units, and ask an AI assistant questions that draw on your saved recipes.
+A full-stack baking app styled like a cozy cookbook. Keep recipes as index cards in a recipe box, import them from recipe sites, bake step by step in cooking mode, share them with a link, and ask an AI assistant questions that draw on your saved recipes.
 
 **Live demo:** https://whisk-ten.vercel.app
 ![Whisk screenshot](docs/screenshot.png)
@@ -9,21 +9,24 @@ The backend runs on a free tier and sleeps when idle, so the first load after a 
 
 ## Features
 
-- Account signup and login with JWT authentication and bcrypt password hashing; email is optional; logins last 7 days
-- Create, edit, delete, and categorize recipes, stored per user
-- Search by title, filter by category, and page through recipes 10 at a time
-- Scale a recipe to a different number of servings
-- Shopping list built from the recipes you select, with checkboxes
-- Ingredient-aware unit converter between grams, cups, and teaspoons
-- Baking assistant powered by Claude that answers measurement, substitution, and troubleshooting questions, using the user's saved recipes as context. It can run on a background job queue ([task-queue](https://github.com/calliec-1223/task-queue), which I also built), so slow AI calls never block the web server
-- Responsive layout for phones and desktop
+- **Recipe box:** recipes are index cards in a drawer, grouped behind category dividers. Filter with the category tabs or search by title. Clicking a card pulls it out beside the drawer, and each open recipe has its own URL, so the back button and links work.
+- **Add, edit and delete** recipes, with an Undo after deleting.
+- **Import from a link:** paste a recipe page's URL and the form fills itself in. The server reads the page's schema.org Recipe data and falls back to Claude for pages without it. Nothing is saved until you check it, and imported recipes link back to their source.
+- **Share links:** give a recipe a public, read-only link. Anyone can read it; logged-in bakers can save their own copy; the owner can turn the link off.
+- **Cooking mode:** a prep checklist, one step at a time, servings scaling (with friendly fractions like 1½ cups), and timers started from times found in each step ("bake for 25 minutes").
+- **Medals and stickers:** rate each finished bake bronze, silver or gold, and earn stickers for milestones. Progress is stored on the server.
+- **"What should I bake?"** wheel, and a **shopping list** built from the recipes you tick.
+- Ingredient-aware **unit converter** between grams, cups, and teaspoons.
+- **Baking assistant** powered by Claude that answers measurement, substitution, and troubleshooting questions, using the user's saved recipes as context. It can run on a background job queue ([task-queue](https://github.com/calliec-1223/task-queue), which I also built), so slow AI calls never block the web server.
+- Accounts with JWT authentication and bcrypt password hashing. Email and a display name are optional, and the name can be changed later.
+- Responsive layout for phones and desktop, keyboard accessible, and calmer for people who turn on "reduce motion".
 
 ## Tech stack
 
 - **Frontend:** React, React Router (Create React App), deployed on Vercel
 - **Backend:** Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Bcrypt, Flask-Limiter, served by gunicorn on Render
 - **Database:** PostgreSQL on Neon in production, SQLite locally
-- **AI:** Anthropic API (Claude Haiku), called server-side only
+- **AI:** Anthropic API (Claude Haiku), called server-side only: the chat assistant, and recipe extraction with structured outputs (JSON schema)
 - **Background jobs:** my own [task-queue](https://github.com/calliec-1223/task-queue) library (Redis + PostgreSQL), used as a Python package
 
 ## Architecture
@@ -61,10 +64,17 @@ Measuring real Claude responses turned up two bugs in the original assistant, bo
 
 ## Design
 
-The interface uses a warm bakery palette (chocolate, blush cream, caramel), Zilla Slab headings, and small uppercase labels. Colors, type sizes, and spacing are defined once as CSS variables in `frontend/src/styles.css`, and text scales with screen width. Form inputs use 16px text so phones don't zoom in on focus.
+The interface is a cookbook on a gingham tablecloth: cocoa-brown outlines, pastel category colors, sticker-style buttons that press down, and a wooden recipe box lined with a faint print of whisks, wheat and strawberries. Type is M PLUS Rounded 1c. Colors, type sizes, and spacing are defined once as CSS variables in `frontend/src/styles.css`. Form inputs use 16px text so phones don't zoom in on focus.
+
+Pulling a card out of the recipe box uses the browser's View Transitions API: the browser slides snapshots of the old and new layout, so nothing has to re-lay out while it animates. An earlier version animated the drawer's width and stuttered, because every row of text re-wrapped on every frame.
 
 ## Design decisions
 
+- **Importing from a URL is guarded against SSRF** (making the server fetch internal addresses for an attacker). Each request, including every redirect hop, is refused unless the host resolves only to public IP addresses, which blocks `localhost`, private networks and the cloud metadata address. Downloads are limited in size and time and must be HTML. One known gap is noted in the code: DNS rebinding.
+- **The import tries the page's own recipe data first.** Most recipe sites embed schema.org `Recipe` data (JSON-LD) for search engines, which is exact and free to read. Only pages without it go to Claude, whose reply is constrained to a JSON schema, and the page text is passed as data rather than instructions. Site-specific quirks (like tips mixed into the steps) are handled and covered by tests.
+- **Share links use random, unguessable tokens**, not recipe IDs, so links can't be found by counting. The public page shows only the recipe and the sharer's name. Turning a link off deletes it, and sharing again makes a new one, so old links stay dead.
+- **Delete with Undo:** a deleted recipe disappears right away, but the server delete waits 6 seconds so Undo only has to put it back on screen. Leaving the page sends any waiting delete immediately (with `keepalive`, so it survives the tab closing).
+- **No migrations yet:** new tables are created at startup, and a startup check adds new columns to existing tables (`recipe.source_url`, `user.display_name`).
 - The Anthropic key stays on the server, and the chat endpoint requires login.
 - Only the user who asked can read a queued answer; anyone else gets a 404, so job IDs don't even confirm they exist.
 - Each chat message carries a unique ID from the browser. If the same request is sent twice (for example, a retry after a dropped connection), the queue returns the original job instead of asking Claude again.
@@ -126,7 +136,7 @@ The before/after load test is `python -m bench.load_test` from `backend/` (it us
 
 ## Tests
 
-The backend has a pytest suite covering signup, login, rate limits, recipe CRUD, input validation, per-user access, the converter, and the chat endpoints (queued answers, who can read them, duplicate submissions, and sync mode). Tests use an in-memory SQLite database, so they never touch your local data.
+The backend has a pytest suite (167 tests) covering signup, login, rate limits, recipe CRUD, input validation, per-user access, the converter, bakes and stickers, share links, and the chat endpoints (queued answers, who can read them, duplicate submissions, and sync mode). The recipe-import tests cover the address safety checks (including redirects to internal addresses) and many shapes of recipe data, with DNS and HTTP replaced by fakes, so they never touch the network. Tests use an in-memory SQLite database, so they never touch your local data.
 
 ```
 pip install -r backend/requirements-dev.txt
@@ -134,12 +144,19 @@ cd backend
 pytest
 ```
 
+The frontend has unit tests for servings scaling and fraction formatting:
+
+```
+cd frontend
+CI=true npx react-scripts test --watchAll=false scale
+```
+
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
 | `JWT_SECRET_KEY` | Signs login tokens (required) |
-| `ANTHROPIC_API_KEY` | Enables the baking assistant |
+| `ANTHROPIC_API_KEY` | Enables the baking assistant and the AI fallback for recipe import |
 | `DATABASE_URL` | Postgres connection string (defaults to local SQLite) |
 | `FRONTEND_ORIGIN` | Allowed CORS origin (defaults to http://localhost:3000) |
 | `REACT_APP_API_URL` | Backend URL used by the frontend build (set it before building; Create React App fills it in at build time) |
