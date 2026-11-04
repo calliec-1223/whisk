@@ -201,3 +201,16 @@
     from { transform: rotateX(95deg); }
   }
 }
+
+/* "Try the demo" under the login form */
+.demo-try {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 2px dashed var(--rb-line);
+}
+
+.demo-try p {
+  margin: 0.5rem 0 0;
+  color: var(--rb-crumb);
+  font-size: 0.9375rem;
+}

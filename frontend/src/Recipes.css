@@ -428,3 +428,9 @@
   margin: 0;
   font-size: 0.875rem;
 }
+
+.demo-note {
+  flex-basis: 100%;
+  color: var(--rb-crumb);
+  font-size: 0.9375rem;
+}

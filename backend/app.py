@@ -13,6 +13,7 @@ import chat_queue
 from taskqueue import QueueFull
 from assistant import ask_claude, extract_recipe
 import recipe_import
+from demo import DEMO_RECIPES
 import secrets
 import math
 import os
@@ -66,6 +67,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique = True, nullable = True)  # optional; NULL when not given
     password = db.Column(db.String(200), nullable = False)
     display_name = db.Column(db.String(40), nullable=True)  # optional; the username is used when blank
+    demo_expires_at = db.Column(db.DateTime, nullable=True)  # set only on "Try the demo" accounts
 
 
 class Bake(db.Model):
@@ -117,6 +119,8 @@ with app.app_context():
     user_columns = {c['name'] for c in inspector.get_columns('user')}
     if 'display_name' not in user_columns:
         db.session.execute(text('ALTER TABLE "user" ADD COLUMN display_name VARCHAR(40)'))
+    if 'demo_expires_at' not in user_columns:
+        db.session.execute(text('ALTER TABLE "user" ADD COLUMN demo_expires_at TIMESTAMP'))
     db.session.commit()
 
 RECIPE_REQUIRED_FIELDS = ('title', 'ingredients', 'steps', 'servings')
@@ -342,7 +346,7 @@ def me():
 
 
 def me_to_dict(user):
-    return {'username': user.username, 'display_name': user.display_name,
+    return {'username': user.username, 'display_name': user.display_name, 'demo': bool(user.demo_expires_at),
             'name': user.display_name or user.username}
 
 
@@ -630,6 +634,56 @@ def login():
     
     token = create_access_token(identity=str(user.id))
     return jsonify({'token': token}), 200
+
+DEMO_HOURS = 24
+
+
+def utc_now_naive():
+    """The current UTC time without a time zone, to match the plain TIMESTAMP column."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def delete_expired_demos():
+    """Remove demo accounts whose day is up, with everything they made."""
+    expired = [u.id for u in User.query.filter(User.demo_expires_at < utc_now_naive()).all()]
+    if not expired:
+        return
+    for model in (Bake, Sticker, ShareLink, Recipe):  # bakes and share links point at recipes, so first
+        model.query.filter(model.user_id.in_(expired)).delete(synchronize_session=False)
+    User.query.filter(User.id.in_(expired)).delete(synchronize_session=False)
+    db.session.commit()
+
+
+@app.route('/demo', methods=['POST'])
+@limiter.limit("10 per hour")
+def start_demo():
+    """Log a visitor into a fresh, private recipe box filled with sample recipes.
+
+    No password anyone knows: the only way in is the token returned here, and the
+    account (with its recipes) is deleted once the token has expired.
+    """
+    delete_expired_demos()
+    username = f'demo-{secrets.token_hex(4)}'
+    while User.query.filter_by(username=username).first():
+        username = f'demo-{secrets.token_hex(4)}'
+    user = User(username=username, display_name='Guest',
+                password=bcrypt.generate_password_hash(secrets.token_urlsafe(32)).decode('utf-8'),
+                demo_expires_at=utc_now_naive() + timedelta(hours=DEMO_HOURS))
+    db.session.add(user)
+    db.session.flush()  # gives user.id
+
+    for sample in DEMO_RECIPES:
+        recipe = Recipe(user_id=user.id, **{k: v for k, v in sample.items() if k != 'medals'})
+        db.session.add(recipe)
+        db.session.flush()
+        for medal in sample['medals']:
+            db.session.add(Bake(user_id=user.id, recipe_id=recipe.id, category=recipe.category, medal=medal))
+    db.session.commit()
+    award_stickers(user.id)
+
+    token = create_access_token(identity=str(user.id), expires_delta=timedelta(hours=DEMO_HOURS))
+    return jsonify({'token': token}), 201
+
 
 @app.route('/recipes/<int:id>', methods=['PUT'])
 @jwt_required()

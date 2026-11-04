@@ -16,7 +16,8 @@ Whisk is a recipe app for bakers: users sign up, save and edit recipes (with cat
 ## Tests
 
 - Backend: `cd backend && pip install -r requirements-dev.txt && venv/bin/pytest`. `tests/conftest.py` points tests at an in-memory DB, never `instance/whisk.db`. Rate limits are off except in the tests that check them. `/chat` isn't covered.
-- Frontend: `CI=true npm test -- --watchAll=false` for a single run. The only test, `src/App.test.js`, is the CRA placeholder and currently fails: Jest can't resolve `react-router-dom` v7, and even once that's fixed, the test looks for a "learn react" link the app no longer has.
+- Frontend: `CI=true npm test -- --watchAll=false` for a single run. `package.json` maps `react-router-dom` to its CommonJS build because Jest 27 can't read React Router 7's package exports, and `src/setupTests.js` adds `TextEncoder` and a stub `fetch`.
+- "Try the demo" (`POST /demo`) creates a private account with the sample recipes in `backend/demo.py`; expired demo accounts are deleted the next time someone starts a demo.
 
 ## Deployment
 

@@ -221,6 +221,11 @@ function Recipes() {
                     meta={<>
                         {recipes.length} {recipeWord(recipes.length)} collected
                         {me && <NameEditor me={me} onSaved={setMe} />}
+                        {me?.demo && (
+                            <span className="demo-note">
+                                Demo box, cleared after a day. <Link to="/signup">Make your own account</Link>
+                            </span>
+                        )}
                     </>}
                     action={
                         <div className="header-actions">

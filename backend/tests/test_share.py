@@ -93,7 +93,7 @@ def test_saving_needs_login_and_a_live_link(client, auth_headers, other_headers)
 
 def test_me_uses_the_username_when_no_name_is_set(client, auth_headers):
     assert client.get('/me', headers=auth_headers).get_json() == {
-        'username': 'alice', 'display_name': None, 'name': 'alice'}
+        'username': 'alice', 'display_name': None, 'name': 'alice', 'demo': False}
 
 
 def test_name_given_at_signup(client):
