@@ -67,7 +67,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #dcb48c; /* inside of the box: warm wood, darker than any category color */
+  /* Inside of the box: like a vintage painted recipe tin, warm brown with a faint
+     printed pattern of whisks, wheat and strawberries */
+  background: #dcb48c url("./drawer-print.svg") 0 0 / 132px 132px;
   border: var(--rb-outline);
   border-radius: 16px;
   box-shadow: 0 4px 0 var(--rb-ink);
