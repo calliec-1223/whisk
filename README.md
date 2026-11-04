@@ -37,6 +37,14 @@ Browser -> React app (Vercel) -> Flask REST API (Render) -> PostgreSQL (Neon)
 
 In **queue** mode, `POST /chat` queues the question and returns `202 Accepted` with a job ID; a worker (`backend/worker.py`) asks Claude while the browser polls `GET /chat/<id>`. In **sync** mode the request calls Claude directly. Production runs sync because the free tier has no Redis or worker.
 
+What queue mode gets from [task-queue](https://github.com/calliec-1223/task-queue):
+- **A crashed worker doesn't lose the question.** Its lease expires, and another worker answers it.
+- **Retries only when they can help.** Overloaded, rate-limited and server errors retry with backoff. Errors that can't succeed (a bad request or a bad API key) fail at once instead of costing more API calls.
+- **No duplicates.** A resent message returns the original job instead of asking Claude twice.
+- **Clean restarts.** On shutdown a worker finishes the answer it's working on (up to 50 s), so a deploy doesn't pay for the same answer twice.
+- **Idle workers wait instead of polling.** They're woken the moment a question arrives.
+- **Busy is a clear message.** If the queue is full, `/chat` returns a "busy, try again" message instead of piling up work.
+
 ### Why a job queue
 
 A Claude answer takes 2-3 seconds, and in sync mode the server process is stuck waiting the whole time. Load test (gunicorn, 2 processes, one user loading recipes 5 times a second while others chat), medians:

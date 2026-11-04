@@ -43,6 +43,9 @@ def main() -> None:
         chat_queue.queue(),
         tasks={chat_queue.TASK: Task(whisk_chat, no_retry=NO_RETRY)},
         lease_seconds=30,  # real answers took 3.4-5.2 s; heartbeats cover anything longer
+        # On shutdown, let an answer in progress finish (Claude calls end within
+        # 45 s) instead of handing it back after the default 25 s and paying twice.
+        shutdown_grace_seconds=50,
     ).run()
 
 
