@@ -4,13 +4,14 @@ Whisk is a recipe app for bakers: users sign up, save and edit recipes (with cat
 
 ## Gotchas
 
-- Tables are created with `db.create_all()` at startup; there are no migrations, so schema changes to existing tables need a manual migration or a fresh DB.
+- Tables are created with `db.create_all()` at startup; there are no migrations. New tables appear on their own, but `create_all` never changes existing tables: add a missing column with a startup check like the one for `recipe.source_url` in `app.py`, or use a fresh DB.
+- Recipe import (`backend/recipe_import.py`) fetches pages from user-given URLs. Keep the private-address check on every request and redirect hop (SSRF); tests in `tests/test_import.py` never touch the network.
 - Rate limits are stored in memory unless `RATELIMIT_STORAGE_URI` is set (e.g. a Redis URL).
 - `REACT_APP_API_URL` is baked in at build time (falls back to `http://127.0.0.1:5000`). For a deployed build, set it before `npm run build`, and set the backend's `FRONTEND_ORIGIN` to the frontend's address so CORS doesn't block requests.
 
 ## Local setup
 
-`backend/.env` (gitignored) needs `JWT_SECRET_KEY` (the app refuses to start without it) and `ANTHROPIC_API_KEY` (only for `/chat`). Optional: `DATABASE_URL` (defaults to SQLite at `backend/instance/whisk.db`), `FRONTEND_ORIGIN` (defaults to `http://localhost:3000`), `FLASK_DEBUG=1`.
+`backend/.env` (gitignored) needs `JWT_SECRET_KEY` (the app refuses to start without it) and `ANTHROPIC_API_KEY` (only for `/chat` and the AI fallback when importing a recipe from a page without recipe data). Optional: `DATABASE_URL` (defaults to SQLite at `backend/instance/whisk.db`), `FRONTEND_ORIGIN` (defaults to `http://localhost:3000`), `FLASK_DEBUG=1`.
 
 ## Tests
 

@@ -8,6 +8,7 @@ import Layout from './Layout'
 import EditRecipePage from './EditRecipePage'
 import Bake from './Bake'
 import StickerBook from './StickerBook'
+import SharedRecipe from './SharedRecipe'
 import { CelebrateProvider } from './Celebrate'
 import { TimerProvider } from './Timers'
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/convert" element={<ProtectedRoute><Layout><Converter /></Layout></ProtectedRoute>} />
         <Route path="/edit/:id" element={<ProtectedRoute><Layout><EditRecipePage /></Layout></ProtectedRoute>} />
         <Route path="/bake/:id" element={<ProtectedRoute><Layout><Bake /></Layout></ProtectedRoute>} />
+        <Route path="/r/:token" element={<SharedRecipe />} />
         <Route path="/stickers" element={<ProtectedRoute><Layout><StickerBook /></Layout></ProtectedRoute>} />
       </Routes>
       </CelebrateProvider>

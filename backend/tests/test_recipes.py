@@ -14,7 +14,8 @@ def create(client, headers, **overrides):
     return client.post("/recipes", json={**RECIPE, **overrides}, headers=headers)
 
 
-NO_BAKES = {"bake_count": 0, "best_medal": None}
+# Fields every recipe comes back with besides the ones it was saved with
+NO_BAKES = {"bake_count": 0, "best_medal": None, "source_url": None, "share_token": None}
 
 
 def only_recipe(client, headers):

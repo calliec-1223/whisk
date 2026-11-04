@@ -467,3 +467,36 @@
     }
   }
 }
+
+/* ---------- Share panel on the pulled-out recipe ---------- */
+
+.share-panel {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: var(--rb-tin);
+  border: 2px dashed var(--rb-crumb);
+  border-radius: 14px;
+}
+
+.share-panel p {
+  font-weight: 700;
+}
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recipes-page .share-row input {
+  flex: 1 1 14rem;
+  min-height: 2.5rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+}
+
+.share-panel .form-error {
+  margin: 0;
+}

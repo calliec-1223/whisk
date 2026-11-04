@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import { apiFetch } from './api'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthBook from './AuthBook'
 
 
@@ -11,6 +11,7 @@ function Signup() {
         email: '',
     })
     const navigate = useNavigate()
+    const location = useLocation() // carries a shared recipe to return to, if any
 
     const handleSignup = () => {
         if (form.username === '' || form.password === ''){
@@ -27,7 +28,7 @@ function Signup() {
             if (data.error) {
             setError(data.error)
         } else {
-            navigate('/')
+            navigate('/', { state: location.state })
         }
         })
     }
@@ -68,7 +69,7 @@ function Signup() {
             />
             {error && <p className="form-error">{error}</p>}
             <button type="button" onClick={handleSignup}>Create account</button>
-            <p className="auth-switch">Already have an account? <Link to="/">Log in</Link></p>
+            <p className="auth-switch">Already have an account? <Link to="/" state={location.state}>Log in</Link></p>
         </AuthBook>
     )
 }

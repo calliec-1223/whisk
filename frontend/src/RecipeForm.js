@@ -5,12 +5,13 @@ import './AddRecipe.css'
 import Toast from './Toast'
 import PageHeader from './PageHeader'
 import { useCelebrate } from './Celebrate'
+import { authFetch } from './api'
 
 const MAX_SERVINGS = 1000
 
 // Shared form for adding and editing a recipe.
 // `save(body)` sends the recipe and returns the fetch promise.
-function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, doneTo = '/recipes' }) {
+function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, doneTo = '/recipes', allowImport = false }) {
     const [form, setForm] = useState({
         title: initialRecipe?.title || '',
         ingredients: initialRecipe ? initialRecipe.ingredients.split('\n') : [],
@@ -18,6 +19,7 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, don
         notes: initialRecipe?.notes || '',
         servings: initialRecipe?.servings ?? '',
         category: initialRecipe?.category || '',
+        source_url: initialRecipe?.source_url || '',
     })
     const [currentIngredient, setCurrentIngredient] = useState('')
     const [currentStep, setCurrentStep] = useState('')
@@ -96,6 +98,15 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, don
         <div className="page-enter form-page">
             <div className="add-container">
                 <PageHeader title={heading} />
+                {allowImport && <ImportBox onImported={(recipe) => setForm({
+                    title: recipe.title,
+                    ingredients: recipe.ingredients,
+                    steps: recipe.steps,
+                    notes: '',
+                    servings: recipe.servings ?? '',
+                    category: recipe.category,
+                    source_url: recipe.source_url,
+                })} />}
                 <div className="add-card">
                     <label htmlFor="recipe-title">Title</label>
                     <input
@@ -198,6 +209,61 @@ function RecipeForm({ heading, saveLabel, toastMessage, initialRecipe, save, don
                 </div>
             </div>
         </div>
+    )
+}
+
+// Paste a link to a recipe online; the server reads the page and the form fills in
+function ImportBox({ onImported }) {
+    const [url, setUrl] = useState('')
+    const [status, setStatus] = useState('idle') // idle | reading | done
+    const [message, setMessage] = useState('')
+    const [error, setError] = useState('')
+
+    const importRecipe = (e) => {
+        e.preventDefault()
+        if (!url.trim()) return
+        setStatus('reading')
+        setError('')
+        authFetch('/recipes/import', { method: 'POST', body: JSON.stringify({ url: url.trim() }) })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.error)
+                onImported(data)
+                setStatus('done')
+                setMessage(data.method === 'ai'
+                    ? 'Filled in by the assistant. Double-check the amounts and steps before you save.'
+                    : 'Filled in! Check everything over before you save.')
+            })
+            .catch((err) => {
+                setStatus('idle')
+                // A TypeError means the request never reached the server
+                setError(err instanceof TypeError || !err.message
+                    ? "Can't reach the server. Please try again."
+                    : err.message)
+            })
+    }
+
+    return (
+        <form className="import-box" onSubmit={importRecipe}>
+            <label htmlFor="import-url">Found a recipe online? Paste the link to fill this in.</label>
+            <div className="ingredient-input-row">
+                <input
+                    id="import-url"
+                    type="url"
+                    inputMode="url"
+                    placeholder="https://"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                />
+                <button type="submit" disabled={status === 'reading'}>
+                    {status === 'reading' ? 'Reading…' : 'Fill in'}
+                </button>
+            </div>
+            <p className="import-status" role="status">
+                {status === 'reading' ? 'Reading the page…' : status === 'done' ? message : ''}
+            </p>
+            {error && <p className="form-error">{error}</p>}
+        </form>
     )
 }
 

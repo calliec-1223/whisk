@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { authFetch } from './api'
 import { CategoryIcon, Medal, MEDAL_NAMES } from './icons'
 import { cardCategory, categoryLabel } from './RecipeIndex'
 
 // The recipe card pulled out of the index box, open beside it.
-function PulledRecipe({ recipe, onClose, onDelete }) {
+function PulledRecipe({ recipe, onClose, onDelete, onShareChange }) {
     const navigate = useNavigate()
     const [desiredServings, setDesiredServings] = useState('')
     const [confirming, setConfirming] = useState(false)
+    const [sharing, setSharing] = useState(false)
     // Ignore clicks while the card slides in, so a double-click on the drawer
     // doesn't land on Start baking
     const [settled, setSettled] = useState(false)
@@ -32,6 +34,11 @@ function PulledRecipe({ recipe, onClose, onDelete }) {
                 <p className="ic-meta">
                     <span className="chip" data-cat={cat}>{categoryLabel(cat)}</span>
                     <span>Serves {recipe.servings}</span>
+                    {recipe.source_url && (
+                        <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
+                            From {siteName(recipe.source_url)}
+                        </a>
+                    )}
                     {recipe.bake_count > 0 && (
                         <span className="baked">
                             <Medal medal={recipe.best_medal} size={20} />
@@ -41,7 +48,9 @@ function PulledRecipe({ recipe, onClose, onDelete }) {
                     )}
                 </p>
 
-                {confirming ? (
+                {sharing ? (
+                    <SharePanel recipe={recipe} onShareChange={onShareChange} onDone={() => setSharing(false)} />
+                ) : confirming ? (
                     <div className="delete-confirm" role="group" aria-label="Confirm delete">
                         <p>Delete this recipe? You can undo right after.</p>
                         <div className="delete-confirm-actions">
@@ -79,6 +88,9 @@ function PulledRecipe({ recipe, onClose, onDelete }) {
                         >
                             Edit
                         </button>
+                        <button type="button" className="rb-ghost" onClick={() => setSharing(true)}>
+                            Share
+                        </button>
                         <button type="button" className="rb-ghost rb-danger" onClick={() => setConfirming(true)}>
                             Delete
                         </button>
@@ -108,6 +120,70 @@ function PulledRecipe({ recipe, onClose, onDelete }) {
                 )}
             </div>
         </article>
+    )
+}
+
+// "bakery.example" from "https://www.bakery.example/cookies"
+export const siteName = (url) => {
+    try {
+        return new URL(url).hostname.replace(/^www\./, '')
+    } catch {
+        return 'the web'
+    }
+}
+
+// Turn the recipe's public link on, copy it, or turn it off
+function SharePanel({ recipe, onShareChange, onDone }) {
+    const [token, setToken] = useState(recipe.share_token)
+    const [copied, setCopied] = useState(false)
+    const [error, setError] = useState('')
+    const link = token && `${window.location.origin}/r/${token}`
+
+    const call = (method) => {
+        setError('')
+        return authFetch(`/recipes/${recipe.id}/share`, { method })
+            .then(res => (res.ok ? res.json() : Promise.reject()))
+    }
+    const turnOn = () => call('POST')
+        .then(data => { setToken(data.token); onShareChange(recipe.id, data.token) })
+        .catch(() => setError("Couldn't make a link. Please try again."))
+    const turnOff = () => call('DELETE')
+        .then(() => { setToken(null); setCopied(false); onShareChange(recipe.id, null) })
+        .catch(() => setError("Couldn't turn the link off. Please try again."))
+    const copy = () => navigator.clipboard.writeText(link)
+        .then(() => setCopied(true))
+        .catch(() => setError('Copy the link above by hand.'))
+
+    return (
+        <div className="share-panel" role="group" aria-label="Share this recipe">
+            {link ? (
+                <>
+                    <p>Anyone with this link can read this recipe and save a copy.</p>
+                    <div className="share-row">
+                        <input
+                            readOnly
+                            value={link}
+                            aria-label="Share link"
+                            onFocus={(e) => e.target.select()}
+                        />
+                        <button type="button" onClick={copy}>{copied ? 'Copied!' : 'Copy link'}</button>
+                    </div>
+                    <div className="share-row">
+                        <button type="button" className="rb-text-button" onClick={turnOff}>Turn off link</button>
+                        <button type="button" className="rb-ghost" onClick={onDone}>Done</button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <p>Make a link so friends can read this recipe and save a copy to their own box.</p>
+                    <div className="share-row">
+                        <button type="button" onClick={turnOn}>Make a share link</button>
+                        <button type="button" className="rb-ghost" onClick={onDone}>Cancel</button>
+                    </div>
+                </>
+            )}
+            {error && <p className="form-error">{error}</p>}
+        </div>
     )
 }
 

@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import { apiFetch } from './api'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthBook from './AuthBook'
 
 function Login({ onLogin }) {
@@ -10,6 +10,9 @@ function Login({ onLogin }) {
     })
     const [error, setError] = useState('')
     const navigate = useNavigate()
+    // Coming from a shared recipe's "Log in to save a copy" goes back there afterwards
+    const location = useLocation()
+    const from = location.state?.from
 
     const handleLogin = () => {
         setError('')
@@ -21,7 +24,7 @@ function Login({ onLogin }) {
         .then(data => {
             if (data.token){
                 localStorage.setItem('token', data.token)
-                navigate('/recipes')
+                navigate(from?.startsWith('/r/') ? from : '/recipes')
             } else {
                 setError(data.error || 'Something went wrong. Please try again.')
             }
@@ -53,7 +56,7 @@ function Login({ onLogin }) {
             />
             {error && <p className="form-error">{error}</p>}
             <button type="button" onClick={handleLogin}>Log in</button>
-            <p className="auth-switch">No account yet? <Link to="/signup">Sign up</Link></p>
+            <p className="auth-switch">No account yet? <Link to="/signup" state={location.state}>Sign up</Link></p>
         </AuthBook>
     )
 }

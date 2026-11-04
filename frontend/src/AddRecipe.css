@@ -67,3 +67,24 @@
   width: 100%;
   margin-top: var(--space-2);
 }
+
+/* ---------- Import from a website ---------- */
+
+.import-box {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem 0.5rem;
+  background: var(--rb-tin);
+  border: 2px dashed var(--rb-crumb);
+  border-radius: 18px;
+}
+
+.import-status {
+  min-height: 1.5rem;
+  color: var(--rb-crumb);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.import-box .form-error {
+  margin: 0 0 0.5rem;
+}

@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -11,7 +11,9 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 
 import chat_queue
 from taskqueue import QueueFull
-from assistant import ask_claude
+from assistant import ask_claude, extract_recipe
+import recipe_import
+import secrets
 import math
 import os
 from datetime import datetime, timedelta, timezone
@@ -55,6 +57,7 @@ class Recipe (db.Model):
     servings = db.Column(db.Integer, nullable = False, default = 1)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False, index = True)
     category = db.Column(db.String(50), nullable=True)
+    source_url = db.Column(db.String(500), nullable=True)  # where an imported recipe came from
 
 
 class User(db.Model):
@@ -83,6 +86,16 @@ class Sticker(db.Model):
     earned_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint('user_id', 'key'),)
 
+
+class ShareLink(db.Model):
+    """A public, read-only link to one recipe. The token is the only secret:
+    random and unguessable, and deleting the row turns the link off."""
+    id = db.Column(db.Integer, primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    token = db.Column(db.String(32), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
 with app.app_context():
     db.create_all()
     # create_all doesn't add indexes to tables that already exist
@@ -92,12 +105,18 @@ with app.app_context():
     # alter columns: an old local whisk.db needs to be recreated.
     if db.engine.dialect.name == 'postgresql':
         db.session.execute(text('ALTER TABLE "user" ALTER COLUMN email DROP NOT NULL'))
+    # create_all doesn't add new columns to existing tables either, so add any
+    # that are missing. Works on SQLite and Postgres; does nothing once added.
+    recipe_columns = {c['name'] for c in inspect(db.engine).get_columns('recipe')}
+    if 'source_url' not in recipe_columns:
+        db.session.execute(text('ALTER TABLE recipe ADD COLUMN source_url VARCHAR(500)'))
     db.session.commit()
 
 RECIPE_REQUIRED_FIELDS = ('title', 'ingredients', 'steps', 'servings')
-RECIPE_TEXT_FIELDS = ('title', 'ingredients', 'steps', 'notes', 'category')
+RECIPE_TEXT_FIELDS = ('title', 'ingredients', 'steps', 'notes', 'category', 'source_url')
 # Match the column sizes so Postgres never rejects a save with a 500
-RECIPE_MAX_LENGTHS = {'title': 100, 'ingredients': 10000, 'steps': 20000, 'notes': 200, 'category': 50}
+RECIPE_MAX_LENGTHS = {'title': 100, 'ingredients': 10000, 'steps': 20000, 'notes': 200, 'category': 50,
+                      'source_url': 500}
 MAX_SERVINGS = 1000
 
 def is_blank(value):
@@ -126,6 +145,10 @@ def validate_recipe(data):
         if len(value) > RECIPE_MAX_LENGTHS[name]:
             return None, f'{name.capitalize()} must be {RECIPE_MAX_LENGTHS[name]} characters or fewer'
         fields[name] = value
+
+    if fields['source_url'] and not fields['source_url'].startswith(('http://', 'https://')):
+        return None, 'Source must be a web address'
+    fields['source_url'] = fields['source_url'] or None
 
     fields['servings'] = parse_servings(data['servings'])
     if fields['servings'] is None:
@@ -183,6 +206,23 @@ def as_utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+# Baker ranks: (bakes needed, title)
+RANKS = [(0, 'Kitchen Helper'), (3, 'Home Baker'), (10, 'Pastry Chef'), (25, 'Head Baker'), (50, 'Master Baker')]
+
+
+def rank_for(bake_count):
+    """The user's rank and how far they are from the next one."""
+    current = max(i for i, (needed, _) in enumerate(RANKS) if bake_count >= needed)
+    nxt = RANKS[current + 1] if current + 1 < len(RANKS) else None
+    return {
+        'rank': RANKS[current][1],
+        'bakes': bake_count,
+        'rank_floor': RANKS[current][0],
+        'next_rank': nxt[1] if nxt else None,
+        'next_rank_at': nxt[0] if nxt else None,
+    }
+
+
 def bake_stats(user_id):
     """{recipe_id: {'bake_count': n, 'best_medal': 'gold' | ...}} for the user's recipes."""
     stats = {}
@@ -203,6 +243,7 @@ def recipe_to_dict(r):
         'notes': r.notes,
         'servings': r.servings,
         'category': r.category,
+        'source_url': r.source_url,
     }
 
 
@@ -222,7 +263,8 @@ def get_recipes():
     user_id = get_jwt_identity()
     recipes = Recipe.query.filter_by(user_id = user_id).all()
     stats = bake_stats(user_id)
-    return jsonify([recipe_with_stats(r, stats) for r in recipes])
+    shares = {s.recipe_id: s.token for s in ShareLink.query.filter_by(user_id=user_id).all()}
+    return jsonify([{**recipe_with_stats(r, stats), 'share_token': shares.get(r.id)} for r in recipes])
 
 @app.route('/recipes/<int:id>', methods=['GET'])
 @jwt_required()
@@ -231,7 +273,8 @@ def get_recipe(id):
     recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
     if not recipe:
         return jsonify({'error': 'Recipe not found'}), 404
-    return jsonify(recipe_with_stats(recipe, bake_stats(user_id)))
+    link = ShareLink.query.filter_by(recipe_id=recipe.id).first()
+    return jsonify({**recipe_with_stats(recipe, bake_stats(user_id)), 'share_token': link.token if link else None})
 
 @app.route('/recipes', methods = ['POST'])
 @jwt_required()
@@ -255,6 +298,7 @@ def delete_recipe(id):
     if not recipe:
         return jsonify ({'error': 'Recipe not found'}), 404 
     Bake.query.filter_by(recipe_id=recipe.id).update({'recipe_id': None})
+    ShareLink.query.filter_by(recipe_id=recipe.id).delete()
     db.session.delete(recipe)
     db.session.commit()
     return jsonify({'message': 'Recipe deleted!'}), 202
@@ -270,11 +314,14 @@ def add_bake(id):
     medal = (request.get_json(silent=True) or {}).get('medal')
     if medal not in MEDALS:
         return jsonify({'error': 'Medal must be bronze, silver or gold'}), 400
+    rank_before = rank_for(Bake.query.filter_by(user_id=user_id).count())['rank']
     db.session.add(Bake(user_id=user_id, recipe_id=recipe.id, category=recipe.category, medal=medal))
     db.session.commit()
     new_stickers = award_stickers(user_id)
     stats = bake_stats(user_id).get(recipe.id)
-    return jsonify({**stats, 'new_stickers': new_stickers}), 201
+    rank = rank_for(Bake.query.filter_by(user_id=user_id).count())
+    return jsonify({**stats, 'new_stickers': new_stickers,
+                    'rank': rank, 'ranked_up': rank['rank'] != rank_before}), 201
 
 @app.route('/stickers', methods=['GET'])
 @jwt_required()
@@ -296,6 +343,122 @@ def claim_sticker():
     if key not in CLAIMABLE_STICKERS:
         return jsonify({'error': 'That sticker can\'t be claimed'}), 400
     return jsonify({'new_stickers': award_stickers(user_id, extra_keys=[key])})
+
+@app.route('/me', methods=['GET'])
+@jwt_required()
+def me():
+    """Who's logged in, and their baker rank."""
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    return jsonify({'username': user.username, **rank_for(Bake.query.filter_by(user_id=user_id).count())})
+
+
+# ---------- Importing a recipe from a website ----------
+
+@app.route('/recipes/import', methods=['POST'])
+@limiter.limit("30 per hour")
+@jwt_required()
+def import_recipe():
+    """Read a recipe from a web page so the user can check it and save it.
+    Nothing is saved here."""
+    url = ((request.get_json(silent=True) or {}).get('url') or '')
+    if not isinstance(url, str) or not url.strip() or len(url) > 500:
+        return jsonify({'error': 'Paste the full link to a recipe page'}), 400
+    url = url.strip()
+    try:
+        page = recipe_import.fetch_page(url)
+    except recipe_import.RecipeImportError as e:
+        return jsonify({'error': str(e)}), 400
+
+    recipe, method = recipe_import.find_recipe(page), 'structured'
+    if recipe is None:
+        # No schema.org Recipe data on the page: ask Claude to read the text
+        try:
+            recipe, method = extract_recipe(recipe_import.page_text(page)), 'ai'
+        except Exception:
+            app.logger.exception('AI recipe extraction failed')
+            recipe = None
+    if recipe is None:
+        return jsonify({'error': "Couldn't find a recipe on that page. Try another link."}), 422
+
+    return jsonify({
+        'title': recipe['title'][:RECIPE_MAX_LENGTHS['title']],
+        'ingredients': [line[:300] for line in recipe['ingredients']][:100],
+        'steps': [line[:2000] for line in recipe['steps']][:60],
+        'servings': recipe['servings'],
+        'category': recipe['category'],
+        'source_url': url,
+        'method': method,
+    })
+
+
+# ---------- Share links ----------
+
+@app.route('/recipes/<int:id>/share', methods=['POST'])
+@jwt_required()
+def share_recipe(id):
+    """Turn on the recipe's share link (or return the one it already has)."""
+    user_id = get_jwt_identity()
+    recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
+    if not recipe:
+        return jsonify({'error': 'Recipe not found'}), 404
+    link = ShareLink.query.filter_by(recipe_id=recipe.id).first()
+    if not link:
+        link = ShareLink(recipe_id=recipe.id, user_id=user_id, token=secrets.token_urlsafe(16))
+        db.session.add(link)
+        db.session.commit()
+    return jsonify({'token': link.token}), 201
+
+
+@app.route('/recipes/<int:id>/share', methods=['DELETE'])
+@jwt_required()
+def unshare_recipe(id):
+    """Turn the share link off. Anyone who has it gets "not found" from now on."""
+    user_id = get_jwt_identity()
+    recipe = Recipe.query.filter_by(id=id, user_id=user_id).first()
+    if not recipe:
+        return jsonify({'error': 'Recipe not found'}), 404
+    ShareLink.query.filter_by(recipe_id=recipe.id).delete()
+    db.session.commit()
+    return jsonify({'message': 'Link turned off'}), 200
+
+
+def shared_recipe_or_404(token):
+    link = ShareLink.query.filter_by(token=token).first()
+    return db.session.get(Recipe, link.recipe_id) if link else None
+
+
+@app.route('/shared/<token>', methods=['GET'])
+@limiter.limit("120 per hour")
+def view_shared(token):
+    """A shared recipe, for anyone with the link (no login needed).
+    Only the recipe and its owner's username are shown: no ids, no other recipes."""
+    recipe = shared_recipe_or_404(token)
+    if not recipe:
+        return jsonify({'error': 'This link is turned off or never existed'}), 404
+    owner = db.session.get(User, recipe.user_id)
+    d = recipe_to_dict(recipe)
+    d.pop('id')
+    return jsonify({**d, 'shared_by': owner.username})
+
+
+@app.route('/shared/<token>/save', methods=['POST'])
+@jwt_required()
+def save_shared(token):
+    """Copy a shared recipe into the logged-in user's own recipe box."""
+    user_id = get_jwt_identity()
+    recipe = shared_recipe_or_404(token)
+    if not recipe:
+        return jsonify({'error': 'This link is turned off or never existed'}), 404
+    copy = Recipe(user_id=user_id, title=recipe.title, ingredients=recipe.ingredients, steps=recipe.steps,
+                  notes=recipe.notes, servings=recipe.servings, category=recipe.category,
+                  source_url=recipe.source_url)
+    db.session.add(copy)
+    db.session.commit()
+    return jsonify({'id': copy.id, 'new_stickers': award_stickers(user_id)}), 201
+
 
 @app.route('/convert', methods = ['POST'])
 def convert_ingredient():

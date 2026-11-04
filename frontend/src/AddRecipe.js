@@ -7,6 +7,7 @@ function AddRecipe() {
             heading="Write a new recipe"
             saveLabel="Save recipe"
             toastMessage="Recipe saved! Nice work."
+            allowImport
             save={(body) => authFetch('/recipes', { method: 'POST', body })}
         />
     )

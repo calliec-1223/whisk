@@ -127,7 +127,7 @@ function Bake() {
             .then(({ ok, data }) => {
                 if (!ok) throw new Error(data.error)
                 play('fanfare')
-                setResult({ medal, count: data.bake_count })
+                setResult({ medal, count: data.bake_count, newRank: data.ranked_up ? data.rank.rank : null })
                 celebrate(data.new_stickers)
             })
             .catch(() => setError("Couldn't save your bake. Please try again."))
@@ -288,6 +288,11 @@ function Bake() {
                                 ? `That was your first time baking ${recipe.title}!`
                                 : `You've baked ${recipe.title} ${result.count} times.`}
                         </p>
+                        {result.newRank && (
+                            <p className="rank-up" role="status">
+                                Level up! You're now a <strong>{result.newRank}</strong>.
+                            </p>
+                        )}
                         <Link to={`/recipes/${recipe.id}`} className="rb-button">Back to my recipe box</Link>
                     </section>
                 )}
