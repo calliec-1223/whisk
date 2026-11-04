@@ -34,7 +34,11 @@ function RecipeIndex({ sections, openId, arrivingId, jumpTo, selected, onToggleS
     // A category tab scrolls its section to the top of the drawer
     useEffect(() => {
         const section = jumpTo && scrollRef.current?.querySelector(`[data-section="${jumpTo.cat}"]`)
-        if (section) scrollRef.current.scrollTo({ top: section.offsetTop, behavior: 'smooth' })
+        if (!section) return
+        // The divider's tab sticks up above the section, so leave room to show it
+        const tab = section.querySelector('.divider-tab')
+        const top = section.offsetTop - (tab ? tab.offsetHeight : 0) - 8
+        scrollRef.current.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
     }, [jumpTo])
 
     return (
